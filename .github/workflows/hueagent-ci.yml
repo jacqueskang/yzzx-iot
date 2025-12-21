@@ -23,15 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Use Node.js 24
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm install --no-fund --no-audit
-        working-directory: ${{ env.WORKING_DIR }}
-
       - name: Semantic-release (dry run)
         id: sr_dryrun
         uses: cycjimmy/semantic-release-action@v6
@@ -41,7 +32,7 @@ jobs:
           ci: false
           branches: |
             [
-              {name: 'refs/pull/+([0-9])/merge'}
+              {name: '.*'}
             ]
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -64,6 +55,15 @@ jobs:
             ---
             _This is a dry run. No tags or releases were created._
             [View logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install --no-fund --no-audit
+        working-directory: ${{ env.WORKING_DIR }}
 
       - name: Run tests
         run: npm test
