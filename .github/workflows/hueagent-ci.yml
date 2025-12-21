@@ -37,23 +37,6 @@ jobs:
         run: npm install --no-fund --no-audit
         working-directory: ${{ env.WORKING_DIR }}
 
-      - name: Run tests
-        run: npm test
-        working-directory: ${{ env.WORKING_DIR }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ env.WORKING_DIR }}
-          file: ${{ env.WORKING_DIR }}/Dockerfile.arm64v8
-          push: false
-          load: true
-          tags: hueagent:${{ github.sha }}
-          platforms: linux/arm64
-
       - name: Preview next release (semantic-release dry-run)
         id: preview
         run: |
@@ -78,3 +61,20 @@ jobs:
             });
         env:
           PREVIEW_JSON: ${{ steps.preview.outputs.release_preview }}
+
+      - name: Run tests
+        run: npm test
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.WORKING_DIR }}
+          file: ${{ env.WORKING_DIR }}/Dockerfile.arm64v8
+          push: false
+          load: true
+          tags: hueagent:${{ github.sha }}
+          platforms: linux/arm64
