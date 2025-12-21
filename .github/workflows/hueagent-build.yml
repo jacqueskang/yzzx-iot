@@ -15,8 +15,10 @@ on:
       - ".github/workflows/**"
 
 permissions:
-  contents: read
+  contents: write
   packages: write
+  issues: write
+  pull-requests: write
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/yzzx/hueagent
@@ -28,31 +30,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check version bump
-        if: github.event_name == 'pull_request'
-        run: |
-          # Get base branch
-          git fetch origin ${{ github.base_ref }}
-          
-          # Check if any code files changed (excluding package.json)
-          CODE_CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- modules/HueAgent | grep -v 'package.json\|package-lock.json\|README.md\|test/' || true)
-          
-          if [ -n "$CODE_CHANGED" ]; then
-            echo "Code changes detected:"
-            echo "$CODE_CHANGED"
-            
-            # Check if version changed
-            VERSION_CHANGED=$(git diff origin/${{ github.base_ref }}...HEAD -- modules/HueAgent/package.json | grep '"version"' || true)
-            
-            if [ -z "$VERSION_CHANGED" ]; then
-              echo "::warning file=modules/HueAgent/package.json::Code changes detected but version not bumped. Please update version in package.json following semantic versioning."
-            else
-              echo "✓ Version updated"
-            fi
-          fi
 
       - name: Use Node.js 24
         uses: actions/setup-node@v4
@@ -88,6 +65,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci --no-fund --no-audit
+        working-directory: modules/HueAgent
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+        working-directory: modules/HueAgent
 
       - name: Extract version from package.json
         id: version

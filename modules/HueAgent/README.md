@@ -2,6 +2,50 @@
 
 IoT Edge module for filtering and processing temperature sensor data.
 
+## Version Management
+
+This project uses [semantic-release](https://semantic-release.gitbook.io/) for automated version management and package publishing. Versions are automatically determined based on commit messages following the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+### How It Works
+
+1. **Commit messages** determine the version bump:
+   - `feat:` → minor version bump (0.1.0 → 0.2.0)
+   - `fix:` → patch version bump (0.1.0 → 0.1.1)
+   - `BREAKING CHANGE:` → major version bump (0.1.0 → 1.0.0)
+   - `perf:`, `refactor:` → patch version bump
+
+2. **On merge to main**:
+   - semantic-release analyzes commits since last release
+   - Determines version bump
+   - Updates package.json
+   - Generates CHANGELOG.md
+   - Creates git tag
+   - Creates GitHub release
+   - Pipeline builds and publishes Docker images with version tags
+
+3. **Do NOT manually update** `package.json` version - it's fully automated!
+
+### Commit Message Format
+
+Use the format defined in `.github/copilot-instructions.md`:
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+Example:
+```
+feat(hueagent): add support for Hue motion sensors
+
+- Parse motion sensor events
+- Update twin with motion state
+- Add motion event filters
+```
+
 ## Development
 
 ### Prerequisites

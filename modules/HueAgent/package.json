@@ -1,6 +1,6 @@
 {
   "name": "hueagent",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "IoT Edge module derived from the Azure IoT Edge NodeJS sample",
   "main": "app.js",
   "scripts": {
@@ -9,7 +9,15 @@
     "test": "mocha"
   },
   "devDependencies": {
-    "mocha": "^10.2.0"
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^11.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "@semantic-release/npm": "^11.0.2",
+    "@semantic-release/release-notes-generator": "^12.1.0",
+    "conventional-changelog-conventionalcommits": "^7.0.2",
+    "mocha": "^10.2.0",
+    "semantic-release": "^23.0.0"
   },
   "dependencies": {
     "azure-iot-device": "^1.17.9",

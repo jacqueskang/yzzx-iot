@@ -46,3 +46,17 @@ ci(workflow): update Node.js version to 24
 - Use imperative mood ("add" not "added")
 - Include scope when relevant (module/component name)
 - Add body for context when needed
+
+## Versioning
+
+This project uses **semantic-release** for automated version management. Versions are automatically determined based on commit messages:
+
+- **DO NOT** manually update `package.json` version
+- Versions are auto-bumped when PRs merge to main
+- semantic-release analyzes commit types to determine version bump:
+  - `feat:` → minor version bump (0.1.0 → 0.2.0)
+  - `fix:` → patch version bump (0.1.0 → 0.1.1)
+  - `BREAKING CHANGE:` or `!` suffix → major version bump (0.1.0 → 1.0.0)
+  - `perf:`, `refactor:` → patch version bump
+- CHANGELOG.md is automatically generated
+- Git tags and GitHub releases are created automatically
