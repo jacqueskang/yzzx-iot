@@ -15,7 +15,7 @@ on:
       - ".github/workflows/**"
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/hueagent
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/yzzx/hueagent
 
 jobs:
   build-and-test:
@@ -25,10 +25,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 18
+      - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
 
       - name: Install dependencies
         run: npm install --no-fund --no-audit
@@ -48,7 +48,7 @@ jobs:
           push: false
           load: true
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          platforms: linux/amd64
+          platforms: linux/arm64
 
   publish:
     name: Publish to GHCR (main only)
@@ -77,4 +77,4 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          platforms: linux/amd64
+          platforms: linux/arm64

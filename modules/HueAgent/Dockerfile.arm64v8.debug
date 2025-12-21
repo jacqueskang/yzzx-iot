@@ -1,10 +1,10 @@
-FROM arm32v7/node:18-slim
+FROM arm64v8/node:24-slim
 
 WORKDIR /app/
 
 COPY package*.json ./
 
-RUN npm install --production
+RUN npm install --omit=dev
 
 COPY app.js filter.js ./
 
