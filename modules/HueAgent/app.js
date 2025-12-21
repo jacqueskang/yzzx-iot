@@ -4,22 +4,41 @@ const { ModuleClient, Message } = require("azure-iot-device");
 const { Mqtt: Transport } = require("azure-iot-device-mqtt");
 
 const HEARTBEAT_METHOD = "heartbeat";
+const MAX_RETRIES = 10;
+const RETRY_DELAY_MS = 5000;
 
-ModuleClient.fromEnvironment(Transport, (err, client) => {
-  if (err) {
-    throw err;
-  }
-
-  client.on("error", (clientError) => {
-    console.error(`HueAgent client error: ${clientError}`);
-  });
-
-  client.open((openErr) => {
-    if (openErr) {
-      throw openErr;
+function connectWithRetry(retryCount = 0) {
+  ModuleClient.fromEnvironment(Transport, (err, client) => {
+    if (err) {
+      console.error(`Error creating client: ${err}`);
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying connection in ${RETRY_DELAY_MS}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        setTimeout(() => connectWithRetry(retryCount + 1), RETRY_DELAY_MS);
+      } else {
+        console.error("Max retries reached. Exiting.");
+        process.exit(1);
+      }
+      return;
     }
 
-    console.log("HueAgent module client initialized");
+    client.on("error", (clientError) => {
+      console.error(`HueAgent client error: ${clientError}`);
+    });
+
+    client.open((openErr) => {
+      if (openErr) {
+        console.error(`Error opening connection: ${openErr}`);
+        if (retryCount < MAX_RETRIES) {
+          console.log(`Retrying connection in ${RETRY_DELAY_MS}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+          setTimeout(() => connectWithRetry(retryCount + 1), RETRY_DELAY_MS);
+        } else {
+          console.error("Max retries reached. Exiting.");
+          process.exit(1);
+        }
+        return;
+      }
+
+      console.log("HueAgent module client initialized");
 
     client.on("inputMessage", (inputName, msg) => {
       handleIncomingMessage(client, inputName, msg);
@@ -50,7 +69,10 @@ ModuleClient.fromEnvironment(Transport, (err, client) => {
       });
     });
   });
-});
+}
+
+// Start connection with retry logic
+connectWithRetry();
 
 function handleIncomingMessage(client, inputName, message) {
   client.complete(message, printResultFor("Receiving message"));
