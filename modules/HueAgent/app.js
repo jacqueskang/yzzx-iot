@@ -46,32 +46,33 @@ function connectWithRetry(retryCount = 0) {
 
       console.log("HueAgent module client initialized");
 
-    client.on("inputMessage", (inputName, msg) => {
-      handleIncomingMessage(client, inputName, msg);
-    });
+      client.on("inputMessage", (inputName, msg) => {
+        handleIncomingMessage(client, inputName, msg);
+      });
 
-    client.onMethod(HEARTBEAT_METHOD, (request, response) => {
-      console.log(`Received direct method: ${HEARTBEAT_METHOD}`);
-      const payload = request && request.payload ? request.payload : {};
-      if (Object.keys(payload).length) {
-        console.dir(payload);
-      }
-
-      const messageStr = "Module [HueAgent] is running";
-      const heartbeatMessage = new Message(messageStr);
-
-      client.sendOutputEvent(
-        HEARTBEAT_METHOD,
-        heartbeatMessage,
-        printResultFor(`Sent method response via event [${HEARTBEAT_METHOD}]`)
-      );
-
-      response.send(200, null, (methodErr) => {
-        if (methodErr) {
-          console.error(`Failed sending method response: ${methodErr}`);
-        } else {
-          console.log("Successfully sent method response");
+      client.onMethod(HEARTBEAT_METHOD, (request, response) => {
+        console.log(`Received direct method: ${HEARTBEAT_METHOD}`);
+        const payload = request && request.payload ? request.payload : {};
+        if (Object.keys(payload).length) {
+          console.dir(payload);
         }
+
+        const messageStr = "Module [HueAgent] is running";
+        const heartbeatMessage = new Message(messageStr);
+
+        client.sendOutputEvent(
+          HEARTBEAT_METHOD,
+          heartbeatMessage,
+          printResultFor(`Sent method response via event [${HEARTBEAT_METHOD}]`)
+        );
+
+        response.send(200, null, (methodErr) => {
+          if (methodErr) {
+            console.error(`Failed sending method response: ${methodErr}`);
+          } else {
+            console.log("Successfully sent method response");
+          }
+        });
       });
     });
   });
