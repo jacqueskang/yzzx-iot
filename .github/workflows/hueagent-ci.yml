@@ -23,12 +23,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Semantic-release (dry run)
-        id: sr_dryrun
-        uses: codfish/semantic-release-action@v4
+      - name: Semantic-release info
+        id: sr_info
+        uses: fingerprintjs/action-semantic-release-info@v2
         with:
-          working-directory: ${{ env.WORKING_DIR }}
-          dry-run: true
+          cwd: ${{ env.WORKING_DIR }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -38,14 +37,14 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            ## 🔍 Semantic Release Preview (Dry Run)
+            ## 🔍 Semantic Release Preview
             
-            **Release:** ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && '✅ Will be published' || '❌ No release' }}
-            ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && format('**Version:** `{0}`', steps.sr_dryrun.outputs.release-version) || '' }}
-            ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && format('**Tag:** `{0}`', steps.sr_dryrun.outputs.release-git-tag) || '' }}
+            **Release:** ${{ steps.sr_info.outputs.no_release == 'false' && '✅ Will be published' || '❌ No release' }}
+            ${{ steps.sr_info.outputs.no_release == 'false' && format('**Version:** `{0}`', steps.sr_info.outputs.version) || '' }}
+            ${{ steps.sr_info.outputs.no_release == 'false' && format('**Tag:** `{0}`', steps.sr_info.outputs.git_tag) || '' }}
             
-            ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && '### 📝 Release Notes Preview' || '' }}
-            ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && steps.sr_dryrun.outputs.release-notes || '_No commits trigger a release based on conventional commit rules._' }}
+            ${{ steps.sr_info.outputs.no_release == 'false' && '### 📝 Release Notes Preview' || '' }}
+            ${{ steps.sr_info.outputs.no_release == 'false' && steps.sr_info.outputs.notes || '_No commits trigger a release based on conventional commit rules._' }}
             
             ---
             _This is a dry run. No tags or releases were created._
