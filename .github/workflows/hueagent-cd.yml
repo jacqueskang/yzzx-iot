@@ -1,18 +1,12 @@
-name: HueAgent Build
+name: HueAgent CD
 
 on:
-  pull_request:
-    branches: [ main ]
-    paths:
-      - "modules/HueAgent/**"
-      - "deployment*.json"
-      - ".github/workflows/**"
   push:
     branches: [ main ]
     paths:
       - "modules/HueAgent/**"
       - "deployment*.json"
-      - ".github/workflows/**"
+      - ".github/workflows/hueagent-*.yml"
 
 permissions:
   contents: write
@@ -21,46 +15,12 @@ permissions:
   pull-requests: write
 
 env:
+  WORKING_DIR: modules/HueAgent
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/yzzx/hueagent
 
 jobs:
-  build-and-test:
-    name: Build & Test (PR and main)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 24
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        run: npm install --no-fund --no-audit
-        working-directory: modules/HueAgent
-
-      - name: Run tests
-        run: npm test
-        working-directory: modules/HueAgent
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build image (no push)
-        uses: docker/build-push-action@v5
-        with:
-          context: modules/HueAgent
-          file: modules/HueAgent/Dockerfile.arm64v8
-          push: false
-          load: true
-          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          platforms: linux/arm64
-
-  publish:
-    name: Publish to GHCR (main only)
-    needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  release-and-publish:
+    name: Release & Publish
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -75,18 +35,18 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-fund --no-audit
-        working-directory: modules/HueAgent
+        working-directory: ${{ env.WORKING_DIR }}
 
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
-        working-directory: modules/HueAgent
+        working-directory: ${{ env.WORKING_DIR }}
 
-      - name: Extract version from package.json
+      - name: Extract version
         id: version
         run: |
-          VERSION=$(node -p "require('./modules/HueAgent/package.json').version")
+          VERSION=$(node -p "require('./${{ env.WORKING_DIR }}/package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "major=$(echo $VERSION | cut -d. -f1)" >> $GITHUB_OUTPUT
           echo "minor=$(echo $VERSION | cut -d. -f1-2)" >> $GITHUB_OUTPUT
@@ -101,11 +61,11 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: modules/HueAgent
-          file: modules/HueAgent/Dockerfile.arm64v8
+          context: ${{ env.WORKING_DIR }}
+          file: ${{ env.WORKING_DIR }}/Dockerfile.arm64v8
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest
