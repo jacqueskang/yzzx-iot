@@ -25,8 +25,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Use Node.js 24
         uses: actions/setup-node@v4
@@ -38,18 +36,21 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
 
       - name: Run semantic-release
+        id: release
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          working_directory: ${{ env.WORKING_DIR }}
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-        run: npx semantic-release
-        working-directory: ${{ env.WORKING_DIR }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract version
+      - name: Compute version tags
+        if: steps.release.outputs.new_release_published == 'true'
         id: version
         run: |
-          VERSION=$(node -p "require('./${{ env.WORKING_DIR }}/package.json').version")
+          VERSION="${{ steps.release.outputs.new_release_version }}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "major=$(echo $VERSION | cut -d. -f1)" >> $GITHUB_OUTPUT
-          echo "minor=$(echo $VERSION | cut -d. -f1-2)" >> $GITHUB_OUTPUT
+          echo "major=$(echo "$VERSION" | cut -d. -f1)" >> $GITHUB_OUTPUT
+          echo "minor=$(echo "$VERSION" | cut -d. -f1-2)" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -62,6 +63,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
+        if: steps.release.outputs.new_release_published == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ${{ env.WORKING_DIR }}
