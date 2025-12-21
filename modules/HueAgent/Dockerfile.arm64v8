@@ -6,7 +6,7 @@ COPY package*.json ./
 
 RUN npm install --omit=dev
 
-COPY app.js filter.js ./
+COPY app.js ./
 
 USER node
 
