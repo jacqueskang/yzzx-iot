@@ -45,6 +45,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: modules/HueAgent
+          file: modules/HueAgent/Dockerfile.arm64v8
           push: false
           load: true
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
@@ -73,6 +74,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: modules/HueAgent
+          file: modules/HueAgent/Dockerfile.arm64v8
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest
