@@ -1,5 +1,12 @@
 {
-  "branches": ["main"],
+  "branches": [
+    "main",
+    {
+      "name": "refs/pull/*/merge",
+      "prerelease": true,
+      "channel": false
+    }
+  ],
   "tagFormat": "HueAgent-v${version}",
   "plugins": [
     [
