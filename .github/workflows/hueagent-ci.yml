@@ -37,10 +37,11 @@ jobs:
 
       - name: Semantic-release (dry run)
         id: sr_dryrun
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@v6
         with:
           working_directory: ${{ env.WORKING_DIR }}
           dry_run: true
+          ci: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

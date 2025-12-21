@@ -28,7 +28,7 @@ jobs:
 
       - name: Run semantic-release
         id: release
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@v6
         with:
           working_directory: ${{ env.WORKING_DIR }}
         env:
