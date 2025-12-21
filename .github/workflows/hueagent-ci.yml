@@ -31,6 +31,11 @@ jobs:
         with:
           node-version: 24
 
+      - name: Set up QEMU (arm64)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
       - name: Install dependencies
         run: npm install --no-fund --no-audit
         working-directory: ${{ env.WORKING_DIR }}
@@ -51,3 +56,17 @@ jobs:
           load: true
           tags: hueagent:${{ github.sha }}
           platforms: linux/arm64
+
+      - name: Run container smoke test (with required envs)
+        run: |
+          docker run --rm --platform linux/arm64 \
+            -e HUEAGENT_SMOKE_TEST=1 \
+            -e IOTEDGE_WORKLOADURI=http://localhost:35000 \
+            -e IOTEDGE_DEVICEID=ci-device \
+            -e IOTEDGE_MODULEID=hueAgent \
+            -e IOTEDGE_IOTHUBHOSTNAME=fake.azure-devices.net \
+            -e IOTEDGE_GATEWAYHOSTNAME=localhost \
+            -e IOTEDGE_MODULEGENERATIONID=1 \
+            -e IOTEDGE_MODULESCOPE=ci-scope \
+            -e IOTEDGE_AUTHSCHEME=sasToken \
+            hueagent:${{ github.sha }}

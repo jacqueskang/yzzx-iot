@@ -7,6 +7,12 @@ const HEARTBEAT_METHOD = "heartbeat";
 const MAX_RETRIES = 10;
 const RETRY_DELAY_MS = 5000;
 
+// Smoke test mode: allow container to start and exit cleanly in CI
+if (process.env.HUEAGENT_SMOKE_TEST === "1") {
+  console.log("HueAgent smoke-test mode: skipping IoT Edge connection.");
+  process.exit(0);
+}
+
 function connectWithRetry(retryCount = 0) {
   ModuleClient.fromEnvironment(Transport, (err, client) => {
     if (err) {
