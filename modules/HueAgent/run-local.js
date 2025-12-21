@@ -12,7 +12,7 @@ function getConnectionString() {
       { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
     ).trim();
     return connectionString;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
