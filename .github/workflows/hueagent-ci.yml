@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 env:
   WORKING_DIR: modules/HueAgent
@@ -47,3 +48,28 @@ jobs:
           load: true
           tags: hueagent:${{ github.sha }}
           platforms: linux/arm64
+
+      - name: Preview next release (semantic-release dry-run)
+        id: preview
+        run: |
+          node scripts/preview-release.js > preview.json
+          echo "release_preview=$(cat preview.json | tr '\n' ' ')" >> $GITHUB_OUTPUT
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Comment predicted release on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const data = JSON.parse(process.env.PREVIEW_JSON);
+            const version = data.version || 'no release (no semantic changes)';
+            const notes = data.notes || '';
+            const body = `Predicted next release: ${version}\n\n${notes}`;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+        env:
+          PREVIEW_JSON: ${{ steps.preview.outputs.release_preview }}
