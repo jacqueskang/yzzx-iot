@@ -64,7 +64,7 @@ jobs:
 
       - name: Build and push Docker image
         if: steps.release.outputs.new_release_published == 'true'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{ env.WORKING_DIR }}
           file: ${{ env.WORKING_DIR }}/Dockerfile.arm64v8
