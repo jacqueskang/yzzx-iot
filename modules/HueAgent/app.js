@@ -78,7 +78,7 @@ function parseTwin(err, twin, client) {
     }
   });
 
-  client.reportProperties({ [TEMP_THRESHOLD_KEY]: threshold }, (reportErr) => {
+  twin.properties.reported.update({ [TEMP_THRESHOLD_KEY]: threshold }, (reportErr) => {
     if (reportErr) {
       console.error(`Failed to report properties: ${reportErr}`);
     }
