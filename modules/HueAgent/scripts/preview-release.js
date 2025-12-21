@@ -3,7 +3,9 @@ const { execSync } = require('child_process');
 (async () => {
   try {
     const currentBranch = (process.env.BRANCH || execSync('git branch --show-current').toString().trim()).trim();
-    const branches = [currentBranch, 'refs/pull/*/merge'].filter(Boolean).join(',');
+    const branches = ['main', 'feat/split-pipeline', currentBranch, 'refs/pull/*/merge']
+      .filter(Boolean)
+      .join(',');
     if (!branches) {
       throw new Error('No branch detected; cannot run semantic-release preview');
     }
