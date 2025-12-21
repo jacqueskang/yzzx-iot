@@ -1,17 +1,13 @@
-const semanticRelease = require('semantic-release');
 const { execSync } = require('child_process');
 
 (async () => {
   try {
     const currentBranch = execSync('git branch --show-current').toString().trim();
-    const result = await semanticRelease({
-      dryRun: true,
-      ci: false,
-      branches: [currentBranch]
-    });
-    if (result && result.nextRelease) {
-      const { version, notes } = result.nextRelease;
-      console.log(JSON.stringify({ version, notes }));
+    const output = execSync(`npx semantic-release --dry-run --branches ${currentBranch}`, { encoding: 'utf8', stdio: 'pipe' });
+    const versionMatch = output.match(/The next release version is (\d+\.\d+\.\d+)/);
+    if (versionMatch) {
+      const version = versionMatch[1];
+      console.log(JSON.stringify({ version, notes: '' }));
     } else {
       console.log(JSON.stringify({ version: null, notes: null }));
     }
