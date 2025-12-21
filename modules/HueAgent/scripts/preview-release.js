@@ -4,6 +4,7 @@ const { execSync } = require('child_process');
   try {
     const currentBranch = execSync('git branch --show-current').toString().trim();
     const output = execSync(`npx semantic-release --dry-run --branches ${currentBranch}`, { encoding: 'utf8', stdio: 'pipe' });
+    console.log('Semantic-release output:', output);
     const versionMatch = output.match(/The next release version is (\d+\.\d+\.\d+)/);
     if (versionMatch) {
       const version = versionMatch[1];
