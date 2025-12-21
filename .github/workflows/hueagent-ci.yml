@@ -51,3 +51,24 @@ jobs:
           load: true
           tags: hueagent:${{ github.sha }}
           platforms: linux/arm64
+
+      - name: Semantic-release (dry run)
+        id: sr_dryrun
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          working_directory: ${{ env.WORKING_DIR }}
+          dry_run: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment dry-run result on PR
+        if: always()
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Semantic-release dry run completed.
+            - published: ${{ steps.sr_dryrun.outputs.new_release_published || 'false' }}
+            - version: ${{ steps.sr_dryrun.outputs.new_release_version || 'n/a' }}
+            - note: dry run only; no tags or releases were created.
+            [View run logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
