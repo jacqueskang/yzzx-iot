@@ -23,10 +23,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
-
-      - name: Fetch latest
-        run: git fetch origin
 
       - name: Use Node.js 24
         uses: actions/setup-node@v4
