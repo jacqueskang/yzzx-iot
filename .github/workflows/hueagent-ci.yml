@@ -25,15 +25,10 @@ jobs:
 
       - name: Semantic-release (dry run)
         id: sr_dryrun
-        uses: cycjimmy/semantic-release-action@v6
+        uses: codfish/semantic-release-action@v4
         with:
-          working_directory: ${{ env.WORKING_DIR }}
-          dry_run: true
-          ci: false
-          branches: |
-            [
-              {name: '.*'}
-            ]
+          working-directory: ${{ env.WORKING_DIR }}
+          dry-run: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -45,12 +40,12 @@ jobs:
           body: |
             ## 🔍 Semantic Release Preview (Dry Run)
             
-            **Release:** ${{ steps.sr_dryrun.outputs.new_release_published == 'true' && '✅ Will be published' || '❌ No release' }}
-            ${{ steps.sr_dryrun.outputs.new_release_published == 'true' && format('**Version:** `{0}`', steps.sr_dryrun.outputs.new_release_version) || '' }}
-            ${{ steps.sr_dryrun.outputs.new_release_published == 'true' && format('**Tag:** `{0}`', steps.sr_dryrun.outputs.new_release_git_tag) || '' }}
+            **Release:** ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && '✅ Will be published' || '❌ No release' }}
+            ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && format('**Version:** `{0}`', steps.sr_dryrun.outputs.release-version) || '' }}
+            ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && format('**Tag:** `{0}`', steps.sr_dryrun.outputs.release-git-tag) || '' }}
             
-            ${{ steps.sr_dryrun.outputs.new_release_published == 'true' && '### 📝 Release Notes Preview' || '' }}
-            ${{ steps.sr_dryrun.outputs.new_release_published == 'true' && steps.sr_dryrun.outputs.new_release_notes || '_No commits trigger a release based on conventional commit rules._' }}
+            ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && '### 📝 Release Notes Preview' || '' }}
+            ${{ steps.sr_dryrun.outputs.new-release-published == 'true' && steps.sr_dryrun.outputs.release-notes || '_No commits trigger a release based on conventional commit rules._' }}
             
             ---
             _This is a dry run. No tags or releases were created._
