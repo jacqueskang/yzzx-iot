@@ -35,7 +35,7 @@
             "status": "running",
             "restartPolicy": "always",
             "settings": {
-              "image": "ghcr.io/jacqueskang/yzzx/hueagent:latest",
+              "image": "ghcr.io/jacqueskang/yzzx/hueagent:1.1.0",
               "createOptions": "{}"
             }
           }
