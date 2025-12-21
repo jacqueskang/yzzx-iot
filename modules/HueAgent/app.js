@@ -2,14 +2,8 @@
 
 const { ModuleClient, Message } = require("azure-iot-device");
 const { Mqtt: Transport } = require("azure-iot-device-mqtt");
-const Filter = require("./filter");
 
 const HEARTBEAT_METHOD = "heartbeat";
-const TEMP_THRESHOLD_KEY = "TemperatureThreshold";
-const DEFAULT_THRESHOLD = 25;
-
-let threshold = DEFAULT_THRESHOLD;
-const filter = new Filter(threshold);
 
 ModuleClient.fromEnvironment(Transport, (err, client) => {
   if (err) {
@@ -30,8 +24,6 @@ ModuleClient.fromEnvironment(Transport, (err, client) => {
     client.on("inputMessage", (inputName, msg) => {
       handleIncomingMessage(client, inputName, msg);
     });
-
-    client.getTwin((twinErr, twin) => parseTwin(twinErr, twin, client));
 
     client.onMethod(HEARTBEAT_METHOD, (request, response) => {
       console.log(`Received direct method: ${HEARTBEAT_METHOD}`);
@@ -60,31 +52,6 @@ ModuleClient.fromEnvironment(Transport, (err, client) => {
   });
 });
 
-function parseTwin(err, twin, client) {
-  if (err) {
-    console.error(`Could not get twin: ${err.message}`);
-    return;
-  }
-
-  threshold = twin.properties.desired[TEMP_THRESHOLD_KEY] || threshold;
-  filter.setThreshold(threshold);
-  console.log(`Initial temperature threshold set to ${threshold}`);
-
-  twin.on("properties.desired", (desiredProps) => {
-    if (desiredProps[TEMP_THRESHOLD_KEY] !== undefined) {
-      threshold = desiredProps[TEMP_THRESHOLD_KEY];
-      filter.setThreshold(threshold);
-      console.log(`Temperature threshold updated to ${threshold}`);
-    }
-  });
-
-  twin.properties.reported.update({ [TEMP_THRESHOLD_KEY]: threshold }, (reportErr) => {
-    if (reportErr) {
-      console.error(`Failed to report properties: ${reportErr}`);
-    }
-  });
-}
-
 function handleIncomingMessage(client, inputName, message) {
   client.complete(message, printResultFor("Receiving message"));
 
@@ -93,18 +60,13 @@ function handleIncomingMessage(client, inputName, message) {
   }
 
   try {
-    const filteredMessage = filter.filterMessage(message);
-    if (!filteredMessage) {
-      return; // dropped because below threshold
-    }
-
     client.sendOutputEvent(
       "output1",
-      filteredMessage,
-      printResultFor(`Sending filtered message from ${inputName}`)
+      message,
+      printResultFor(`Sending message from ${inputName}`)
     );
   } catch (messageErr) {
-    console.error(`Error when filtering message, skipping: ${messageErr}`);
+    console.error(`Error when processing message, skipping: ${messageErr}`);
   }
 }
 
