@@ -3,11 +3,12 @@ const { execSync } = require('child_process');
 (async () => {
   try {
     const currentBranch = (process.env.BRANCH || execSync('git branch --show-current').toString().trim()).trim();
-    if (!currentBranch) {
-      throw new Error('BRANCH is empty; cannot run semantic-release preview');
+    const branches = [currentBranch, 'refs/pull/*/merge'].filter(Boolean).join(',');
+    if (!branches) {
+      throw new Error('No branch detected; cannot run semantic-release preview');
     }
 
-    const output = execSync(`npx semantic-release --dry-run --ci=false --branches ${currentBranch}`, {
+    const output = execSync(`npx semantic-release --dry-run --ci=false --branches ${branches}`, {
       encoding: 'utf8',
       stdio: 'pipe'
     });
