@@ -1,11 +1,13 @@
 const semanticRelease = require('semantic-release');
+const { execSync } = require('child_process');
 
 (async () => {
   try {
+    const currentBranch = execSync('git branch --show-current').toString().trim();
     const result = await semanticRelease({
       dryRun: true,
       ci: false,
-      branches: ['main']
+      branches: [currentBranch]
     });
     if (result && result.nextRelease) {
       const { version, notes } = result.nextRelease;
