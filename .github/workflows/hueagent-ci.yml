@@ -43,6 +43,8 @@ jobs:
           node scripts/preview-release.js > preview.json
           echo "release_preview=$(cat preview.json | tr '\n' ' ')" >> $GITHUB_OUTPUT
         working-directory: ${{ env.WORKING_DIR }}
+        env:
+          BRANCH: ${{ github.head_ref }}
 
       - name: Comment predicted release on PR
         if: github.event_name == 'pull_request'
