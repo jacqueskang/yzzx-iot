@@ -1,6 +1,6 @@
 # HueAgent
 
-IoT Edge module for filtering and processing temperature sensor data.
+IoT Edge module for controlling Philips Hue lights via the Hue Bridge API.
 
 ## Version Management
 
@@ -98,8 +98,44 @@ npm test
 
 ## Configuration
 
-The module reads temperature threshold from module twin desired properties:
-- `TemperatureThreshold` - Temperature threshold for filtering messages (default: 25)
+### First Time Setup: Pairing with Hue Bridge
+
+When you first deploy HueAgent, you need to pair it with your Philips Hue Bridge. Follow these steps:
+
+1. **Locate your Hue Bridge** on your local network and find the **link button** on the back
+
+2. **Call the initialize method** (you can wait a moment before pressing):
+   ```bash
+   az iot hub invoke-module-method \
+     --hub-name <your-hub-name> \
+     --device-id <your-device-id> \
+     --module-name HueAgent \
+     --method-name initialize
+   ```
+
+3. **Press the link button on the bridge** within the next 5 seconds (it's the physical button on the back)
+
+4. **Wait for the response** - the module will try to pair for up to 30 seconds:
+   - If successful: Returns `{bridgeIp, username}` and saves credentials
+   - If failed: Returns error - try pressing the button again and repeat steps 2-3
+
+**That's it!** Once paired, the module will automatically reconnect using saved credentials on every restart.
+
+### Customizing Pairing Timeout
+
+If you need more time or faster retries, pass custom options:
+```bash
+az iot hub invoke-module-method \
+  --hub-name <your-hub-name> \
+  --device-id <your-device-id> \
+  --module-name HueAgent \
+  --method-name initialize \
+  --method-payload '{"pressWaitMs": 10000, "retryDelayMs": 2000, "maxDurationMs": 60000}'
+```
+
+- `pressWaitMs` - Time to wait before starting (press button within this window) - default: 5000ms
+- `retryDelayMs` - Pause between retry attempts - default: 3000ms
+- `maxDurationMs` - Total time to keep trying - default: 30000ms
 
 ## Deployment
 
