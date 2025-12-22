@@ -225,7 +225,6 @@ class AssetMonitor {
   async #sendEvent(changes) {
     const eventData = {
       timestamp: new Date().toISOString(),
-      bridgeIp: this.bridge.bridgeIp,
       changes
     };
 

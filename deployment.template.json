@@ -56,10 +56,10 @@
             "status": "running",
             "restartPolicy": "always",
             "settings": {
-              "image": "ghcr.io/jacqueskang/yzzx/hueagent:1.4.0",
+              "image": "ghcr.io/jacqueskang/yzzx/hueagent:1.5.0",
               "createOptions": {
                 "Env": [
-                  "HUE_POLL_INTERVAL_MS=30000"
+                  "HUE_POLL_INTERVAL_MS=60000"
                 ],
                 "HostConfig": {
                   "Mounts": [
