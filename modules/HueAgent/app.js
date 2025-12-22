@@ -189,6 +189,55 @@ function connectWithRetry(retryCount = 0) {
           sendMethodResponse(response, 500, { error: error.message }, 'stopMonitoring');
         }
       });
+
+      // Direct method to capture snapshot
+      client.onMethod("snapshot", async (request, response) => {
+        try {
+          if (!hueBridge) {
+            throw new Error('Hue bridge not initialized. Call initialize method first.');
+          }
+
+          if (!monitor) {
+            throw new Error('Asset monitor not initialized.');
+          }
+
+          console.log("[HueAgent] Snapshot method invoked");
+          
+          // Pause monitoring during snapshot
+          const wasPaused = monitor.pause();
+          
+          try {
+            // Capture snapshot
+            const snapshotData = await monitor.snapshot();
+            
+            // Send snapshot to IoT Hub
+            const { Message } = require('azure-iot-device');
+            const message = new Message(JSON.stringify(snapshotData));
+            message.contentType = 'application/json';
+            message.contentEncoding = 'utf-8';
+            
+            client.sendOutputEvent(HUE_EVENTS_OUTPUT, message, (err) => {
+              if (err) {
+                console.error(`[HueAgent] Failed to send snapshot: ${err.message}`);
+              } else {
+                console.log('[HueAgent] Snapshot sent successfully');
+              }
+            });
+            
+            sendMethodResponse(response, 200, { status: "snapshot captured and sent", timestamp: snapshotData.timestamp }, 'snapshot');
+          } finally {
+            // Resume monitoring if it was running
+            if (monitor.isRunning()) {
+              await monitor.resume();
+            }
+          }
+        } catch (error) {
+          console.error(`[HueAgent] Snapshot failed: ${error.message}`);
+          sendMethodResponse(response, 500, { error: error.message }, 'snapshot');
+        }
+      });
+
+      
     });
   });
 }
