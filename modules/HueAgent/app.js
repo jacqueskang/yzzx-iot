@@ -9,9 +9,11 @@ const AssetMonitor = require("./AssetMonitor");
 const MAX_RETRIES = 10;
 const RETRY_DELAY_MS = 5000;
 const DATA_DIR = "/app/data";
+const DEFAULT_POLL_INTERVAL_MS = 10000;
+const HUE_EVENTS_OUTPUT = "hueEvents";
 
 const DEVICE_NAME = process.env.IOTEDGE_DEVICEID || "unknown-device";
-const POLL_INTERVAL_MS = Number(process.env.HUE_POLL_INTERVAL_MS) || 10000;
+const POLL_INTERVAL_MS = Number(process.env.HUE_POLL_INTERVAL_MS) || DEFAULT_POLL_INTERVAL_MS;
 let hueBridge = null;
 let monitor = null;
 
@@ -19,6 +21,23 @@ let monitor = null;
 if (process.env.HUEAGENT_SMOKE_TEST === "1") {
   console.log("HueAgent smoke-test mode: skipping IoT Edge connection.");
   process.exit(0);
+}
+
+/**
+ * Send a response to a direct method
+ * @param {Object} response - The response object
+ * @param {number} statusCode - HTTP status code
+ * @param {Object} body - Response body
+ * @param {string} methodName - Name of the method (for logging)
+ */
+function sendMethodResponse(response, statusCode, body, methodName) {
+  response.send(statusCode, body, (err) => {
+    if (err) {
+      console.error(`Failed sending ${methodName} response: ${err}`);
+    } else {
+      console.log(`${methodName} response sent successfully`);
+    }
+  });
 }
 
 function connectWithRetry(retryCount = 0) {
@@ -67,7 +86,7 @@ function connectWithRetry(retryCount = 0) {
             monitor = new AssetMonitor(hueBridge, client, {
               dataDir: DATA_DIR,
               pollIntervalMs: POLL_INTERVAL_MS,
-              outputName: 'hueEvents'
+              outputName: HUE_EVENTS_OUTPUT
             });
             await monitor.start();
           } else {
@@ -111,28 +130,16 @@ function connectWithRetry(retryCount = 0) {
             monitor = new AssetMonitor(hueBridge, client, {
               dataDir: DATA_DIR,
               pollIntervalMs: POLL_INTERVAL_MS,
-              outputName: 'hueEvents'
+              outputName: HUE_EVENTS_OUTPUT
             });
             await monitor.start();
           }
 
           console.log(`Hue pairing completed: bridge=${hueBridge.bridgeIp} user=${hueBridge.username}`);
-          response.send(200, { bridgeIp: hueBridge.bridgeIp, username: hueBridge.username }, (err) => {
-            if (err) {
-              console.error(`Failed sending initialize response: ${err}`);
-            } else {
-              console.log("Initialize response sent successfully");
-            }
-          });
+          sendMethodResponse(response, 200, { bridgeIp: hueBridge.bridgeIp, username: hueBridge.username }, 'initialize');
         } catch (error) {
           console.error(`Hue pairing failed: ${error.message}`);
-          response.send(500, { error: error.message }, (err) => {
-            if (err) {
-              console.error(`Failed sending initialize error response: ${err}`);
-            } else {
-              console.log("Initialize error response sent");
-            }
-          });
+          sendMethodResponse(response, 500, { error: error.message }, 'initialize');
         }
       });
 
@@ -158,22 +165,10 @@ function connectWithRetry(retryCount = 0) {
           await monitor.start();
 
           console.log("Monitoring started successfully");
-          response.send(200, { status: "monitoring started" }, (err) => {
-            if (err) {
-              console.error(`Failed sending startMonitoring response: ${err}`);
-            } else {
-              console.log("StartMonitoring response sent successfully");
-            }
-          });
+          sendMethodResponse(response, 200, { status: "monitoring started" }, 'startMonitoring');
         } catch (error) {
           console.error(`Start monitoring failed: ${error.message}`);
-          response.send(500, { error: error.message }, (err) => {
-            if (err) {
-              console.error(`Failed sending startMonitoring error response: ${err}`);
-            } else {
-              console.log("StartMonitoring error response sent");
-            }
-          });
+          sendMethodResponse(response, 500, { error: error.message }, 'startMonitoring');
         }
       });
 
@@ -188,22 +183,10 @@ function connectWithRetry(retryCount = 0) {
           monitor.stop();
 
           console.log("Monitoring stopped successfully");
-          response.send(200, { status: "monitoring stopped" }, (err) => {
-            if (err) {
-              console.error(`Failed sending stopMonitoring response: ${err}`);
-            } else {
-              console.log("StopMonitoring response sent successfully");
-            }
-          });
+          sendMethodResponse(response, 200, { status: "monitoring stopped" }, 'stopMonitoring');
         } catch (error) {
           console.error(`Stop monitoring failed: ${error.message}`);
-          response.send(500, { error: error.message }, (err) => {
-            if (err) {
-              console.error(`Failed sending stopMonitoring error response: ${err}`);
-            } else {
-              console.log("StopMonitoring error response sent");
-            }
-          });
+          sendMethodResponse(response, 500, { error: error.message }, 'stopMonitoring');
         }
       });
     });
