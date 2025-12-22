@@ -60,7 +60,7 @@ class HueBridge {
 
   /**
    * Load lights and sensors from the bridge
-   * @returns {Promise<Object>} Object with lights and sensors
+   * @returns {Promise<void>}
    */
   async loadAssets() {
     this.#ensureAuthenticated();
@@ -81,8 +81,6 @@ class HueBridge {
         type: sensor.type,
         ...sensor
       }));
-
-      return { lights: this.lights, sensors: this.sensors };
     } catch (error) {
       throw new Error(`Failed to load assets: ${error.message}`);
     }
