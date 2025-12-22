@@ -84,6 +84,51 @@ class AssetMonitor {
   }
 
   /**
+   * Pause monitoring temporarily
+   * @returns {boolean} True if successfully paused
+   */
+  pause() {
+    if (!this.#isRunning) {
+      return false;
+    }
+    if (this.#interval) {
+      clearInterval(this.#interval);
+      this.#interval = null;
+    }
+    console.log('AssetMonitor paused');
+    return true;
+  }
+
+  /**
+   * Resume monitoring after pause
+   * @returns {Promise<void>}
+   */
+  async resume() {
+    if (this.#isRunning && !this.#interval) {
+      this.#interval = setInterval(() => this.#poll(), this.pollIntervalMs);
+      console.log('AssetMonitor resumed');
+    }
+  }
+
+  /**
+   * Capture current snapshot of all lights and sensors
+   * @returns {Promise<Object>} Snapshot object with timestamp and assets
+   */
+  async snapshot() {
+    try {
+      await this.bridge.loadAssets();
+      return {
+        timestamp: new Date().toISOString(),
+        lights: this.bridge.lights,
+        sensors: this.bridge.sensors
+      };
+    } catch (error) {
+      console.error(`AssetMonitor: Failed to capture snapshot: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
    * Poll bridge and detect changes
    * @private
    */
@@ -236,6 +281,28 @@ class AssetMonitor {
       this.client.sendOutputEvent(this.outputName, message, (err) => {
         if (err) {
           console.error(`Failed to send event: ${err.message}`);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  /**
+   * Send snapshot to IoT Hub
+   * @private
+   * @param {Object} snapshotData - Snapshot data with lights and sensors
+   */
+  async #sendSnapshot(snapshotData) {
+    const message = new Message(JSON.stringify(snapshotData));
+    message.contentType = 'application/json';
+    message.contentEncoding = 'utf-8';
+
+    return new Promise((resolve, reject) => {
+      this.client.sendOutputEvent(this.outputName, message, (err) => {
+        if (err) {
+          console.error(`Failed to send snapshot: ${err.message}`);
           reject(err);
         } else {
           resolve();
