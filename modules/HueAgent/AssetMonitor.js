@@ -127,27 +127,44 @@ class AssetMonitor {
   #detectChanges(previous, current) {
     const changes = [];
 
-    // Compare lights
-    const currentLightsMap = new Map(current.lights.map(l => [l.id, l]));
-    const previousLightsMap = new Map(previous.lights.map(l => [l.id, l]));
+    // Compare both lights and sensors
+    changes.push(...this.#detectAssetChanges('light', previous.lights, current.lights));
+    changes.push(...this.#detectAssetChanges('sensor', previous.sensors, current.sensors));
 
-    for (const [id, currentLight] of currentLightsMap) {
-      const prevLight = previousLightsMap.get(id);
-      if (!prevLight) {
+    return changes;
+  }
+
+  /**
+   * Detect changes for a specific asset type
+   * @private
+   * @param {string} type - Asset type ('light' or 'sensor')
+   * @param {Array} previousAssets - Previous assets array
+   * @param {Array} currentAssets - Current assets array
+   * @returns {Array} Array of change objects
+   */
+  #detectAssetChanges(type, previousAssets, currentAssets) {
+    const changes = [];
+    const currentMap = new Map(currentAssets.map(a => [a.id, a]));
+    const previousMap = new Map(previousAssets.map(a => [a.id, a]));
+
+    // Check for added or updated assets
+    for (const [id, currentAsset] of currentMap) {
+      const prevAsset = previousMap.get(id);
+      if (!prevAsset) {
         changes.push({
-          type: 'light',
+          type,
           id,
-          name: currentLight.name,
+          name: currentAsset.name,
           change: 'added',
-          state: currentLight.state
+          state: currentAsset.state
         });
       } else {
-        const stateChanges = this.#compareStates(prevLight.state, currentLight.state);
+        const stateChanges = this.#compareStates(prevAsset.state, currentAsset.state);
         if (stateChanges.length > 0) {
           changes.push({
-            type: 'light',
+            type,
             id,
-            name: currentLight.name,
+            name: currentAsset.name,
             change: 'updated',
             properties: stateChanges
           });
@@ -155,53 +172,13 @@ class AssetMonitor {
       }
     }
 
-    // Check for removed lights
-    for (const [id, prevLight] of previousLightsMap) {
-      if (!currentLightsMap.has(id)) {
+    // Check for removed assets
+    for (const [id, prevAsset] of previousMap) {
+      if (!currentMap.has(id)) {
         changes.push({
-          type: 'light',
+          type,
           id,
-          name: prevLight.name,
-          change: 'removed'
-        });
-      }
-    }
-
-    // Compare sensors
-    const currentSensorsMap = new Map(current.sensors.map(s => [s.id, s]));
-    const previousSensorsMap = new Map(previous.sensors.map(s => [s.id, s]));
-
-    for (const [id, currentSensor] of currentSensorsMap) {
-      const prevSensor = previousSensorsMap.get(id);
-      if (!prevSensor) {
-        changes.push({
-          type: 'sensor',
-          id,
-          name: currentSensor.name,
-          change: 'added',
-          state: currentSensor.state
-        });
-      } else {
-        const stateChanges = this.#compareStates(prevSensor.state, currentSensor.state);
-        if (stateChanges.length > 0) {
-          changes.push({
-            type: 'sensor',
-            id,
-            name: currentSensor.name,
-            change: 'updated',
-            properties: stateChanges
-          });
-        }
-      }
-    }
-
-    // Check for removed sensors
-    for (const [id, prevSensor] of previousSensorsMap) {
-      if (!currentSensorsMap.has(id)) {
-        changes.push({
-          type: 'sensor',
-          id,
-          name: prevSensor.name,
+          name: prevAsset.name,
           change: 'removed'
         });
       }
