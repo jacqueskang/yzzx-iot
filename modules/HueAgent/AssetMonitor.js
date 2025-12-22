@@ -10,6 +10,10 @@ const { Message } = require('azure-iot-device');
 class AssetMonitor {
   static STATE_FILE = 'hue-monitor-state.json';
 
+  #previousState;
+  #interval;
+  #isRunning;
+
   /**
    * Create an asset monitor
    * @param {Object} hueBridge - HueBridge instance
@@ -27,10 +31,6 @@ class AssetMonitor {
     this.#interval = null;
     this.#isRunning = false;
   }
-
-  #previousState;
-  #interval;
-  #isRunning;
 
   /**
    * Start monitoring
