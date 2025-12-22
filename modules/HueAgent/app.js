@@ -43,35 +43,35 @@ function sendMethodResponse(response, statusCode, body, methodName) {
 function connectWithRetry(retryCount = 0) {
   ModuleClient.fromEnvironment(Transport, (err, client) => {
     if (err) {
-      console.error(`Error creating client: ${err}`);
+      console.error(`[HueAgent] Error creating client: ${err}`);
       if (retryCount < MAX_RETRIES) {
-        console.log(`Retrying connection in ${RETRY_DELAY_MS}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        console.log(`[HueAgent] Retrying connection in ${RETRY_DELAY_MS}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
         setTimeout(() => connectWithRetry(retryCount + 1), RETRY_DELAY_MS);
       } else {
-        console.error("Max retries reached. Exiting.");
+        console.error("[HueAgent] Max retries reached. Exiting.");
         process.exit(1);
       }
       return;
     }
 
     client.on("error", (clientError) => {
-      console.error(`HueAgent client error: ${clientError}`);
+      console.error(`[HueAgent] Client error: ${clientError}`);
     });
 
     client.open((openErr) => {
       if (openErr) {
-        console.error(`Error opening connection: ${openErr}`);
+        console.error(`[HueAgent] Error opening connection: ${openErr}`);
         if (retryCount < MAX_RETRIES) {
-          console.log(`Retrying connection in ${RETRY_DELAY_MS}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+          console.log(`[HueAgent] Retrying connection in ${RETRY_DELAY_MS}ms... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
           setTimeout(() => connectWithRetry(retryCount + 1), RETRY_DELAY_MS);
         } else {
-          console.error("Max retries reached. Exiting.");
+          console.error("[HueAgent] Max retries reached. Exiting.");
           process.exit(1);
         }
         return;
       }
 
-      console.log("HueAgent module client initialized");
+      console.log("[HueAgent] Module client initialized");
 
       const repository = new HueBridgeRepository(DATA_DIR);
 
@@ -80,7 +80,7 @@ function connectWithRetry(retryCount = 0) {
         try {
           hueBridge = await repository.load();
           if (hueBridge) {
-            console.log(`Hue bridge loaded from saved credentials: ${hueBridge.bridgeIp}`);
+            console.log(`[HueAgent] Hue bridge loaded from saved credentials: ${hueBridge.bridgeIp}`);
             
             // Start monitoring
             monitor = new AssetMonitor(hueBridge, client, {
@@ -90,10 +90,10 @@ function connectWithRetry(retryCount = 0) {
             });
             await monitor.start();
           } else {
-            console.warn("No saved Hue bridge credentials found. Call initialize direct method to pair.");
+            console.warn("[HueAgent] No saved Hue bridge credentials found. Call initialize direct method to pair.");
           }
         } catch (error) {
-          console.warn(`Failed to load Hue bridge credentials: ${error.message}`);
+          console.warn(`[HueAgent] Failed to load Hue bridge credentials: ${error.message}`);
         }
       })();
 
@@ -105,7 +105,7 @@ function connectWithRetry(retryCount = 0) {
         const maxDurationMs = Number(payload.maxDurationMs) || 30000;
 
         try {
-          console.log("Initialize method invoked: starting Hue pairing");
+          console.log("[HueAgent] Initialize method invoked: starting Hue pairing");
           
           // Discover bridges
           const bridges = await HueBridge.discoverBridges();
@@ -135,10 +135,10 @@ function connectWithRetry(retryCount = 0) {
             await monitor.start();
           }
 
-          console.log(`Hue pairing completed: bridge=${hueBridge.bridgeIp} user=${hueBridge.username}`);
+          console.log(`[HueAgent] Hue pairing completed: bridge=${hueBridge.bridgeIp} user=${hueBridge.username}`);
           sendMethodResponse(response, 200, { bridgeIp: hueBridge.bridgeIp, username: hueBridge.username }, 'initialize');
         } catch (error) {
-          console.error(`Hue pairing failed: ${error.message}`);
+          console.error(`[HueAgent] Hue pairing failed: ${error.message}`);
           sendMethodResponse(response, 500, { error: error.message }, 'initialize');
         }
       });
@@ -154,7 +154,7 @@ function connectWithRetry(retryCount = 0) {
             throw new Error('Monitoring is already running.');
           }
 
-          console.log("StartMonitoring method invoked");
+          console.log("[HueAgent] StartMonitoring method invoked");
           if (!monitor) {
             monitor = new AssetMonitor(hueBridge, client, {
               dataDir: DATA_DIR,
@@ -164,10 +164,10 @@ function connectWithRetry(retryCount = 0) {
           }
           await monitor.start();
 
-          console.log("Monitoring started successfully");
+          console.log("[HueAgent] Monitoring started successfully");
           sendMethodResponse(response, 200, { status: "monitoring started" }, 'startMonitoring');
         } catch (error) {
-          console.error(`Start monitoring failed: ${error.message}`);
+          console.error(`[HueAgent] Start monitoring failed: ${error.message}`);
           sendMethodResponse(response, 500, { error: error.message }, 'startMonitoring');
         }
       });
@@ -179,13 +179,13 @@ function connectWithRetry(retryCount = 0) {
             throw new Error('Monitoring is not running.');
           }
 
-          console.log("StopMonitoring method invoked");
+          console.log("[HueAgent] StopMonitoring method invoked");
           monitor.stop();
 
-          console.log("Monitoring stopped successfully");
+          console.log("[HueAgent] Monitoring stopped successfully");
           sendMethodResponse(response, 200, { status: "monitoring stopped" }, 'stopMonitoring');
         } catch (error) {
-          console.error(`Stop monitoring failed: ${error.message}`);
+          console.error(`[HueAgent] Stop monitoring failed: ${error.message}`);
           sendMethodResponse(response, 500, { error: error.message }, 'stopMonitoring');
         }
       });
