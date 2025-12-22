@@ -56,7 +56,7 @@
             "status": "running",
             "restartPolicy": "always",
             "settings": {
-              "image": "ghcr.io/jacqueskang/yzzx/hueagent:1.1.0",
+              "image": "ghcr.io/jacqueskang/yzzx/hueagent:1.3.0",
               "createOptions": {
                 "HostConfig": {
                   "Mounts": [
