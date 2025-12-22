@@ -196,9 +196,12 @@ class AssetMonitor {
    */
   #compareStates(prevState, currState) {
     const changes = [];
+    const ignoredKeys = new Set(['lastupdated']);
     const allKeys = new Set([...Object.keys(prevState || {}), ...Object.keys(currState || {})]);
 
     for (const key of allKeys) {
+      if (ignoredKeys.has(key)) continue;
+      
       const prevValue = prevState?.[key];
       const currValue = currState?.[key];
       
