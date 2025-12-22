@@ -6,6 +6,7 @@ const HueBridge = require("./HueBridge");
 
 const MAX_RETRIES = 10;
 const RETRY_DELAY_MS = 5000;
+const DATA_DIR = "/app/data";
 
 const DEVICE_NAME = process.env.IOTEDGE_DEVICEID || "unknown-device";
 let hueBridge = null;
@@ -52,7 +53,7 @@ function connectWithRetry(retryCount = 0) {
       // Try to load persisted Hue bridge credentials
       (async () => {
         try {
-          hueBridge = await HueBridge.load("/app/data");
+          hueBridge = await HueBridge.load(DATA_DIR);
           if (hueBridge) {
             console.log(`Hue bridge loaded from saved credentials: ${hueBridge.bridgeIp}`);
           } else {
@@ -89,7 +90,7 @@ function connectWithRetry(retryCount = 0) {
           });
 
           // Persist credentials to /app/data
-          await hueBridge.save("/app/data");
+          await hueBridge.save(DATA_DIR);
 
           console.log(`Hue pairing completed: bridge=${hueBridge.bridgeIp} user=${hueBridge.username}`);
           response.send(200, { bridgeIp: hueBridge.bridgeIp, username: hueBridge.username }, (err) => {
@@ -106,6 +107,39 @@ function connectWithRetry(retryCount = 0) {
               console.error(`Failed sending initialize error response: ${err}`);
             } else {
               console.log("Initialize error response sent");
+            }
+          });
+        }
+      });
+
+      // Direct method to reload assets from the Hue bridge
+      client.onMethod("reload", async (request, response) => {
+        try {
+          if (!hueBridge) {
+            throw new Error('Hue bridge not initialized. Call initialize method first.');
+          }
+
+          console.log("Reload method invoked: loading assets from Hue bridge");
+          const lights = await hueBridge.loadAssets();
+          
+          // Persist updated assets to /app/data
+          await hueBridge.save(DATA_DIR);
+
+          console.log(`Assets reloaded successfully: ${hueBridge.assets.length} assets found`);
+          response.send(200, { assetCount: hueBridge.assets.length, assets: hueBridge.assets }, (err) => {
+            if (err) {
+              console.error(`Failed sending reload response: ${err}`);
+            } else {
+              console.log("Reload response sent successfully");
+            }
+          });
+        } catch (error) {
+          console.error(`Asset reload failed: ${error.message}`);
+          response.send(500, { error: error.message }, (err) => {
+            if (err) {
+              console.error(`Failed sending reload error response: ${err}`);
+            } else {
+              console.log("Reload error response sent");
             }
           });
         }
