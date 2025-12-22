@@ -4,6 +4,7 @@ const assert = require('assert');
 const HueBridge = require('../HueBridge');
 const http = require('http');
 const https = require('https');
+const os = require('os');
 
 describe('HueBridge', function() {
   describe('Constructor', function() {
@@ -158,42 +159,45 @@ describe('HueBridge', function() {
     const fs = require('fs');
     const path = require('path');
     function makeTempDir() {
-      const dir = path.join(__dirname, '..', '.tmp-test-data');
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      return dir;
+      const prefix = path.join(os.tmpdir(), 'hueagent-test-');
+      return fs.mkdtempSync(prefix);
     }
 
-    it('persists and loads credentials from custom dir', async function() {
+    it('persists and loads credentials plus assets', async function() {
       const tempDir = makeTempDir();
       const creds = { bridgeIp: '192.168.1.2', username: 'user123' };
+      const assets = [{ id: 'sensor-1', type: 'temp' }];
 
-      const bridge = new HueBridge(creds.bridgeIp, creds.username);
-      await bridge.saveCredentials(tempDir);
-      const loaded = await HueBridge.fromCredentials(tempDir);
+      const bridge = new HueBridge(creds.bridgeIp, creds.username, assets);
+      await bridge.save(tempDir);
+      const loaded = await HueBridge.load(tempDir);
 
       assert.ok(loaded);
       assert.strictEqual(loaded.bridgeIp, creds.bridgeIp);
       assert.strictEqual(loaded.username, creds.username);
-      const filePath = path.join(tempDir, 'hue-credentials.json');
-      assert.ok(fs.existsSync(filePath));
+      assert.deepStrictEqual(loaded.assets, assets);
+      const credsPath = path.join(tempDir, 'hue-credentials.json');
+      const assetsPath = path.join(tempDir, 'hue-assets.json');
+      assert.ok(fs.existsSync(credsPath));
+      assert.ok(fs.existsSync(assetsPath));
     });
 
-    it('fromCredentials loads persisted credentials and returns instance', async function() {
+    it('load returns instance with empty assets when missing file', async function() {
       const tempDir = makeTempDir();
       const creds = { bridgeIp: '192.168.1.3', username: 'user456' };
+      const credsPath = path.join(tempDir, 'hue-credentials.json');
+      await fs.promises.writeFile(credsPath, JSON.stringify(creds, null, 2), 'utf8');
 
-      const bridge1 = new HueBridge(creds.bridgeIp, creds.username);
-      await bridge1.saveCredentials(tempDir);
-
-      const bridge2 = await HueBridge.fromCredentials(tempDir);
-      assert.ok(bridge2);
-      assert.strictEqual(bridge2.bridgeIp, creds.bridgeIp);
-      assert.strictEqual(bridge2.username, creds.username);
+      const bridge = await HueBridge.load(tempDir);
+      assert.ok(bridge);
+      assert.strictEqual(bridge.bridgeIp, creds.bridgeIp);
+      assert.strictEqual(bridge.username, creds.username);
+      assert.deepStrictEqual(bridge.assets, []);
     });
 
-    it('fromCredentials returns null when no credentials exist', async function() {
+    it('load returns null when no credentials exist', async function() {
       const tempDir = path.join(__dirname, '..', '.tmp-test-data-nonexistent');
-      const bridge = await HueBridge.fromCredentials(tempDir);
+      const bridge = await HueBridge.load(tempDir);
       assert.strictEqual(bridge, null);
     });
   });

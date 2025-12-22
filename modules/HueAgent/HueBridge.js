@@ -9,15 +9,47 @@ const path = require('path');
  * HueBridge class for interacting with Philips Hue Bridge
  */
 class HueBridge {
+  static CREDENTIALS_FILE = 'hue-credentials.json';
+  static ASSETS_FILE = 'hue-assets.json';
+
   /**
    * Create a HueBridge instance
    * @param {string} bridgeIp - IP address of the Hue bridge
    * @param {string} username - API username (application key)
    */
-  constructor(bridgeIp, username = null) {
+  constructor(bridgeIp, username = null, assets = []) {
     this.bridgeIp = bridgeIp;
     this.username = username;
+    this.assets = Array.isArray(assets) ? assets : [];
     this.baseUrl = `http://${bridgeIp}/api`;
+  }
+
+  /**
+   * Factory: Load from dataDir and create an authenticated HueBridge instance
+   * @param {string} dataDir - Directory containing hue-credentials.json
+   * @returns {Promise<HueBridge | null>} Authenticated bridge instance or null if credentials not found
+   */
+  static async load(dataDir) {
+    const credentialsPath = path.join(dataDir, HueBridge.CREDENTIALS_FILE);
+    const assetsPath = path.join(dataDir, HueBridge.ASSETS_FILE);
+
+    try {
+      const text = await fs.promises.readFile(credentialsPath, 'utf8');
+      const creds = JSON.parse(text);
+
+      let assets = [];
+      try {
+        const assetsText = await fs.promises.readFile(assetsPath, 'utf8');
+        const parsedAssets = JSON.parse(assetsText);
+        assets = Array.isArray(parsedAssets) ? parsedAssets : [];
+      } catch {
+        assets = [];
+      }
+
+      return new HueBridge(creds.bridgeIp, creds.username, assets);
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -57,37 +89,6 @@ class HueBridge {
   }
 
   /**
-   * Create a new user (authenticate) with the bridge
-   * @private
-   * @param {string} appName - Application name
-   * @param {string} deviceName - Device name
-   * @returns {Promise<string>} The generated username (API key)
-   */
-  async #createUser(appName = 'hueagent', deviceName = 'iot-device') {
-    const data = JSON.stringify({
-      devicetype: `${appName}#${deviceName}`
-    });
-
-    try {
-      const response = await this.#makeRequest('POST', '/api', data);
-      
-      if (response[0] && response[0].error) {
-        throw new Error(response[0].error.description);
-      }
-      
-      if (response[0] && response[0].success) {
-        this.username = response[0].success.username;
-        this.baseUrl = `http://${this.bridgeIp}/api/${this.username}`;
-        return this.username;
-      }
-      
-      throw new Error('Unexpected response format from bridge');
-    } catch (error) {
-      throw new Error(`Failed to create user: ${error.message}`);
-    }
-  }
-
-  /**
    * Get all lights connected to the bridge
    * @returns {Promise<Object>} Object containing all lights data
    */
@@ -106,27 +107,14 @@ class HueBridge {
    * @param {string} dataDir
    * @returns {Promise<void>}
    */
-  async saveCredentials(dataDir) {
+  async save(dataDir) {
     const creds = { bridgeIp: this.bridgeIp, username: this.username };
-    const filePath = path.join(dataDir, 'hue-credentials.json');
-    await fs.promises.mkdir(dataDir, { recursive: true });
-    await fs.promises.writeFile(filePath, JSON.stringify(creds, null, 2), 'utf8');
-  }
+    const credentialsPath = path.join(dataDir, HueBridge.CREDENTIALS_FILE);
+    const assetsPath = path.join(dataDir, HueBridge.ASSETS_FILE);
 
-  /**
-   * Factory: Load credentials from dataDir and create an authenticated HueBridge instance
-   * @param {string} dataDir - Directory containing hue-credentials.json
-   * @returns {Promise<HueBridge | null>} Authenticated bridge instance or null if credentials not found
-   */
-  static async fromCredentials(dataDir) {
-    const filePath = path.join(dataDir, 'hue-credentials.json');
-    try {
-      const text = await fs.promises.readFile(filePath, 'utf8');
-      const creds = JSON.parse(text);
-      return new HueBridge(creds.bridgeIp, creds.username);
-    } catch {
-      return null;
-    }
+    await fs.promises.mkdir(dataDir, { recursive: true });
+    await fs.promises.writeFile(credentialsPath, JSON.stringify(creds, null, 2), 'utf8');
+    await fs.promises.writeFile(assetsPath, JSON.stringify(this.assets, null, 2), 'utf8');
   }
 
   /**
@@ -160,6 +148,37 @@ class HueBridge {
     }
 
     throw lastError || new Error('Pairing timed out');
+  }
+
+  /**
+   * Create a new user (authenticate) with the bridge
+   * @private
+   * @param {string} appName - Application name
+   * @param {string} deviceName - Device name
+   * @returns {Promise<string>} The generated username (API key)
+   */
+  async #createUser(appName = 'hueagent', deviceName = 'iot-device') {
+    const data = JSON.stringify({
+      devicetype: `${appName}#${deviceName}`
+    });
+
+    try {
+      const response = await this.#makeRequest('POST', '/api', data);
+      
+      if (response[0] && response[0].error) {
+        throw new Error(response[0].error.description);
+      }
+      
+      if (response[0] && response[0].success) {
+        this.username = response[0].success.username;
+        this.baseUrl = `http://${this.bridgeIp}/api/${this.username}`;
+        return this.username;
+      }
+      
+      throw new Error('Unexpected response format from bridge');
+    } catch (error) {
+      throw new Error(`Failed to create user: ${error.message}`);
+    }
   }
 
   static #sleep(ms) {
