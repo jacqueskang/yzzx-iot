@@ -52,7 +52,7 @@ function connectWithRetry(retryCount = 0) {
       // Try to load persisted Hue bridge credentials
       (async () => {
         try {
-          hueBridge = await HueBridge.fromCredentials("/app/data");
+          hueBridge = await HueBridge.load("/app/data");
           if (hueBridge) {
             console.log(`Hue bridge loaded from saved credentials: ${hueBridge.bridgeIp}`);
           } else {
@@ -63,7 +63,7 @@ function connectWithRetry(retryCount = 0) {
         }
       })();
 
-      // Direct method to initialize Hue pairing and persist credentials
+      // Direct method to initialize Hue pairing and save credentials
       client.onMethod("initialize", async (request, response) => {
         const payload = request && request.payload ? request.payload : {};
         const pressWaitMs = Number(payload.pressWaitMs) || 5000;
@@ -89,7 +89,7 @@ function connectWithRetry(retryCount = 0) {
           });
 
           // Persist credentials to /app/data
-          await hueBridge.saveCredentials("/app/data");
+          await hueBridge.save("/app/data");
 
           console.log(`Hue pairing completed: bridge=${hueBridge.bridgeIp} user=${hueBridge.username}`);
           response.send(200, { bridgeIp: hueBridge.bridgeIp, username: hueBridge.username }, (err) => {
