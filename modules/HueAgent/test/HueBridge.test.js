@@ -4,7 +4,6 @@ const assert = require('assert');
 const HueBridge = require('../HueBridge');
 const http = require('http');
 const https = require('https');
-const os = require('os');
 
 describe('HueBridge', function() {
   describe('Constructor', function() {
@@ -146,11 +145,11 @@ describe('HueBridge', function() {
         };
       };
 
-      const result = await bridge.loadAssets();
-      assert.ok(Array.isArray(result.lights));
-      assert.ok(Array.isArray(result.sensors));
-      assert.strictEqual(result.lights.length, 2);
-      assert.strictEqual(result.sensors.length, 1);
+      await bridge.loadAssets();
+      assert.ok(Array.isArray(bridge.lights));
+      assert.ok(Array.isArray(bridge.sensors));
+      assert.strictEqual(bridge.lights.length, 2);
+      assert.strictEqual(bridge.sensors.length, 1);
     });
 
     it('should throw error when not authenticated', async function() {

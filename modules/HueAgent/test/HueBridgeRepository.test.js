@@ -42,13 +42,12 @@ describe("HueBridgeRepository", () => {
       await fs.promises.writeFile(lightsPath, JSON.stringify(lights), "utf8");
       await fs.promises.writeFile(sensorsPath, JSON.stringify(sensors), "utf8");
 
-      const data = await repository.load();
-      assert.deepStrictEqual(data, {
-        bridgeIp: "192.168.1.100",
-        username: "test-user-123",
-        lights,
-        sensors
-      });
+      const bridge = await repository.load();
+      assert.ok(bridge instanceof HueBridge);
+      assert.strictEqual(bridge.bridgeIp, "192.168.1.100");
+      assert.strictEqual(bridge.username, "test-user-123");
+      assert.deepStrictEqual(bridge.lights, lights);
+      assert.deepStrictEqual(bridge.sensors, sensors);
     });
 
     it("should return empty arrays when lights/sensors files do not exist", async () => {
@@ -56,13 +55,12 @@ describe("HueBridgeRepository", () => {
       const credentials = { bridgeIp: "192.168.1.100", username: "test-user-123" };
       await fs.promises.writeFile(credentialsPath, JSON.stringify(credentials), "utf8");
 
-      const data = await repository.load();
-      assert.deepStrictEqual(data, {
-        bridgeIp: "192.168.1.100",
-        username: "test-user-123",
-        lights: [],
-        sensors: []
-      });
+      const bridge = await repository.load();
+      assert.ok(bridge instanceof HueBridge);
+      assert.strictEqual(bridge.bridgeIp, "192.168.1.100");
+      assert.strictEqual(bridge.username, "test-user-123");
+      assert.deepStrictEqual(bridge.lights, []);
+      assert.deepStrictEqual(bridge.sensors, []);
     });
 
     it("should handle invalid JSON in lights/sensors files gracefully", async () => {
@@ -75,13 +73,12 @@ describe("HueBridgeRepository", () => {
       await fs.promises.writeFile(lightsPath, "invalid json", "utf8");
       await fs.promises.writeFile(sensorsPath, "invalid json", "utf8");
 
-      const data = await repository.load();
-      assert.deepStrictEqual(data, {
-        bridgeIp: "192.168.1.100",
-        username: "test-user-123",
-        lights: [],
-        sensors: []
-      });
+      const bridge = await repository.load();
+      assert.ok(bridge instanceof HueBridge);
+      assert.strictEqual(bridge.bridgeIp, "192.168.1.100");
+      assert.strictEqual(bridge.username, "test-user-123");
+      assert.deepStrictEqual(bridge.lights, []);
+      assert.deepStrictEqual(bridge.sensors, []);
     });
   });
 
@@ -121,11 +118,12 @@ describe("HueBridgeRepository", () => {
       bridge2.sensors = [{ id: "3", name: "New sensor" }];
       await repository.save(bridge2);
 
-      const data = await repository.load();
-      assert.strictEqual(data.bridgeIp, "192.168.1.200");
-      assert.strictEqual(data.username, "user-2");
-      assert.strictEqual(data.lights[0].name, "New light");
-      assert.strictEqual(data.sensors[0].name, "New sensor");
+      const loaded = await repository.load();
+      assert.ok(loaded instanceof HueBridge);
+      assert.strictEqual(loaded.bridgeIp, "192.168.1.200");
+      assert.strictEqual(loaded.username, "user-2");
+      assert.strictEqual(loaded.lights[0].name, "New light");
+      assert.strictEqual(loaded.sensors[0].name, "New sensor");
     });
   });
 });

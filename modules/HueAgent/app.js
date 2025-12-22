@@ -56,9 +56,8 @@ function connectWithRetry(retryCount = 0) {
       // Try to load persisted Hue bridge credentials
       (async () => {
         try {
-          const data = await repository.load();
-          if (data) {
-            hueBridge = new HueBridge(data.bridgeIp, data.username, data.lights, data.sensors);
+          hueBridge = await repository.load();
+          if (hueBridge) {
             console.log(`Hue bridge loaded from saved credentials: ${hueBridge.bridgeIp}`);
           } else {
             console.warn("No saved Hue bridge credentials found. Call initialize direct method to pair.");
@@ -124,7 +123,7 @@ function connectWithRetry(retryCount = 0) {
           }
 
           console.log("Reload method invoked: loading assets from Hue bridge");
-          const lights = await hueBridge.loadAssets();
+          await hueBridge.loadAssets();
           
           // Persist updated assets to /app/data
           await repository.save(hueBridge);

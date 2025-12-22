@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const HueBridge = require('./HueBridge');
 
 /**
  * Repository for persisting and loading HueBridge state
@@ -21,7 +22,7 @@ class HueBridgeRepository {
 
   /**
    * Load bridge state from disk
-   * @returns {Promise<Object|null>} Bridge state or null if not found
+   * @returns {Promise<HueBridge|null>} HueBridge instance or null if not found
    */
   async load() {
     const credentialsPath = path.join(this.dataDir, HueBridgeRepository.CREDENTIALS_FILE);
@@ -35,12 +36,12 @@ class HueBridgeRepository {
       const lights = await this.#loadFile(lightsPath);
       const sensors = await this.#loadFile(sensorsPath);
 
-      return {
-        bridgeIp: creds.bridgeIp,
-        username: creds.username,
-        lights: Array.isArray(lights) ? lights : [],
-        sensors: Array.isArray(sensors) ? sensors : []
-      };
+      return new HueBridge(
+        creds.bridgeIp,
+        creds.username,
+        Array.isArray(lights) ? lights : [],
+        Array.isArray(sensors) ? sensors : []
+      );
     } catch {
       return null;
     }
