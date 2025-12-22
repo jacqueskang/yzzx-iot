@@ -19,7 +19,7 @@ class HueBridge {
     this.username = username;
     this.lights = Array.isArray(lights) ? lights : [];
     this.sensors = Array.isArray(sensors) ? sensors : [];
-    this.baseUrl = `http://${bridgeIp}/api`;
+    this.#updateBaseUrl();
   }
 
   /**
@@ -66,7 +66,7 @@ class HueBridge {
     this.#ensureAuthenticated();
 
     try {
-      const lights = await this.#makeRequest('GET', `/api/${this.username}/lights`);
+      const lights = await this.#makeRequest('GET', `${this.baseUrl}/lights`);
       this.lights = Object.entries(lights).map(([id, light]) => ({
         id,
         name: light.name,
@@ -74,7 +74,7 @@ class HueBridge {
         ...light
       }));
 
-      const sensors = await this.#makeRequest('GET', `/api/${this.username}/sensors`);
+      const sensors = await this.#makeRequest('GET', `${this.baseUrl}/sensors`);
       this.sensors = Object.entries(sensors).map(([id, sensor]) => ({
         id,
         name: sensor.name,
@@ -140,7 +140,7 @@ class HueBridge {
       
       if (response[0] && response[0].success) {
         this.username = response[0].success.username;
-        this.baseUrl = `http://${this.bridgeIp}/api/${this.username}`;
+        this.#updateBaseUrl();
         return this.username;
       }
       
@@ -152,6 +152,18 @@ class HueBridge {
 
   static #sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Update baseUrl after authentication
+   * @private
+   */
+  #updateBaseUrl() {
+    if (this.username) {
+      this.baseUrl = `http://${this.bridgeIp}/api/${this.username}`;
+    } else {
+      this.baseUrl = `http://${this.bridgeIp}/api`;
+    }
   }
 
   /**
