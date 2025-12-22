@@ -125,8 +125,8 @@ function connectWithRetry(retryCount = 0) {
           // Persist updated assets to /app/data
           await hueBridge.save(DATA_DIR);
 
-          console.log(`Assets reloaded successfully: ${hueBridge.assets.length} assets found`);
-          response.send(200, { assetCount: hueBridge.assets.length, assets: hueBridge.assets }, (err) => {
+          console.log(`Assets reloaded successfully: ${hueBridge.lights.length} lights and ${hueBridge.sensors.length} sensors found`);
+          response.send(200, { lights: hueBridge.lights, sensors: hueBridge.sensors }, (err) => {
             if (err) {
               console.error(`Failed sending reload response: ${err}`);
             } else {
