@@ -102,7 +102,7 @@ describe('HueBridge', function() {
     });
   });
 
-  describe('getLights', function() {
+  describe('loadAssets', function() {
     let bridge;
     let originalHttpRequest;
 
@@ -139,7 +139,7 @@ describe('HueBridge', function() {
         };
       };
 
-      const lights = await bridge.getLights();
+      const lights = await bridge.loadAssets();
       assert.deepStrictEqual(lights, mockLights);
     });
 
@@ -147,7 +147,7 @@ describe('HueBridge', function() {
       const unauthBridge = new HueBridge('192.168.1.100');
       
       try {
-        await unauthBridge.getLights();
+        await unauthBridge.loadAssets();
         assert.fail('Should have thrown an error');
       } catch (error) {
         assert.ok(error.message.includes('Not authenticated'));

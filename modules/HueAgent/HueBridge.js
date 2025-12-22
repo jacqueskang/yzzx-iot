@@ -89,14 +89,21 @@ class HueBridge {
   }
 
   /**
-   * Get all lights connected to the bridge
+   * Load all lights connected to the bridge and store in assets
    * @returns {Promise<Object>} Object containing all lights data
    */
-  async getLights() {
+  async loadAssets() {
     this.#ensureAuthenticated();
     
     try {
-      return await this.#makeRequest('GET', `/api/${this.username}/lights`);
+      const lights = await this.#makeRequest('GET', `/api/${this.username}/lights`);
+      this.assets = Object.entries(lights).map(([id, light]) => ({
+        id,
+        name: light.name,
+        type: light.type,
+        ...light
+      }));
+      return lights;
     } catch (error) {
       throw new Error(`Failed to get lights: ${error.message}`);
     }
@@ -137,7 +144,7 @@ class HueBridge {
     while (Date.now() - start < maxDurationMs) {
       try {
         await this.#createUser('hueagent', deviceName);
-        try { await this.getLights(); } catch { /* ignore */ }
+        try { await this.loadAssets(); } catch { /* ignore */ }
         return this;
       } catch (err) {
         lastError = err;
