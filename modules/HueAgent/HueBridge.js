@@ -17,7 +17,6 @@ class HueBridge {
     this.username = username;
     this.lights = [];
     this.sensors = [];
-    this.#updateBaseUrl();
   }
 
   /**
@@ -138,7 +137,6 @@ class HueBridge {
       
       if (response[0] && response[0].success) {
         this.username = response[0].success.username;
-        this.#updateBaseUrl();
         return this.username;
       }
       
@@ -153,15 +151,14 @@ class HueBridge {
   }
 
   /**
-   * Update baseUrl after authentication
-   * @private
+   * Get the base URL for API requests
+   * @returns {string} Base URL
    */
-  #updateBaseUrl() {
+  get baseUrl() {
     if (this.username) {
-      this.baseUrl = `http://${this.bridgeIp}/api/${this.username}`;
-    } else {
-      this.baseUrl = `http://${this.bridgeIp}/api`;
+      return `http://${this.bridgeIp}/api/${this.username}`;
     }
+    return `http://${this.bridgeIp}/api`;
   }
 
   /**
