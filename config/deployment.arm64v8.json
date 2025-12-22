@@ -36,7 +36,7 @@
             "restartPolicy": "always",
             "settings": {
               "image": "ghcr.io/jacqueskang/yzzx/hueagent:1.6.0",
-              "createOptions": "{\"Env\":[\"HUE_POLL_INTERVAL_MS=60000\"],\"HostConfig\":{\"Mounts\":[{\"Type\":\"volume\",\"Source\":\"hueagent-data\",\"Target\":\"/app/data\"}]}}"
+              "createOptions": "{\"Env\":[\"HUE_POLL_INTERVAL_MS=30000\"],\"HostConfig\":{\"Mounts\":[{\"Type\":\"volume\",\"Source\":\"hueagent-data\",\"Target\":\"/app/data\"}]}}"
             }
           }
         }
