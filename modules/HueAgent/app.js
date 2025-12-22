@@ -46,10 +46,6 @@ function connectWithRetry(retryCount = 0) {
 
       console.log("HueAgent module client initialized");
 
-      client.on("inputMessage", (inputName, msg) => {
-        handleIncomingMessage(client, inputName, msg);
-      });
-
       client.onMethod(HEARTBEAT_METHOD, (request, response) => {
         console.log(`Received direct method: ${HEARTBEAT_METHOD}`);
         const payload = request && request.payload ? request.payload : {};
@@ -80,24 +76,6 @@ function connectWithRetry(retryCount = 0) {
 
 // Start connection with retry logic
 connectWithRetry();
-
-function handleIncomingMessage(client, inputName, message) {
-  client.complete(message, printResultFor("Receiving message"));
-
-  if (!message) {
-    return;
-  }
-
-  try {
-    client.sendOutputEvent(
-      "output1",
-      message,
-      printResultFor(`Sending message from ${inputName}`)
-    );
-  } catch (messageErr) {
-    console.error(`Error when processing message, skipping: ${messageErr}`);
-  }
-}
 
 function printResultFor(op) {
   return function printResult(err, res) {
