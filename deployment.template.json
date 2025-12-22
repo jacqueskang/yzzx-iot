@@ -59,7 +59,7 @@
               "image": "ghcr.io/jacqueskang/yzzx/hueagent:1.6.0",
               "createOptions": {
                 "Env": [
-                  "HUE_POLL_INTERVAL_MS=60000"
+                  "HUE_POLL_INTERVAL_MS=30000"
                 ],
                 "HostConfig": {
                   "Mounts": [
