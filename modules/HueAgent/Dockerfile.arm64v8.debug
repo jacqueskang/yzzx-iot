@@ -13,6 +13,8 @@ EXPOSE 9229
 # Persist credentials directory
 RUN mkdir -p /app/data && chown node:node /app/data
 
+VOLUME ["/app/data"]
+
 USER node
 
 CMD ["node", "--inspect=0.0.0.0:9229", "app.js"]

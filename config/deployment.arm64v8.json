@@ -36,7 +36,7 @@
             "restartPolicy": "always",
             "settings": {
               "image": "ghcr.io/jacqueskang/yzzx/hueagent:1.1.0",
-              "createOptions": "{}"
+              "createOptions": "{\"HostConfig\":{\"Mounts\":[{\"Type\":\"volume\",\"Source\":\"hueagent-data\",\"Target\":\"/app/data\"}]}}"
             }
           }
         }
