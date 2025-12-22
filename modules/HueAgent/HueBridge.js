@@ -11,14 +11,12 @@ class HueBridge {
    * Create a HueBridge instance
    * @param {string} bridgeIp - IP address of the Hue bridge
    * @param {string} username - API username (application key)
-   * @param {Array} lights - Array of light devices
-   * @param {Array} sensors - Array of sensor devices
    */
-  constructor(bridgeIp, username = null, lights = [], sensors = []) {
+  constructor(bridgeIp, username = null) {
     this.bridgeIp = bridgeIp;
     this.username = username;
-    this.lights = Array.isArray(lights) ? lights : [];
-    this.sensors = Array.isArray(sensors) ? sensors : [];
+    this.lights = [];
+    this.sensors = [];
     this.#updateBaseUrl();
   }
 
