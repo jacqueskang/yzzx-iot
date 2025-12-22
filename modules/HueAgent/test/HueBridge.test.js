@@ -115,17 +115,24 @@ describe('HueBridge', function() {
       http.request = originalHttpRequest;
     });
 
-    it('should get all lights successfully', async function() {
+    it('should get all lights and sensors successfully', async function() {
       const mockLights = {
-        "1": { name: "Living Room", state: { on: true } },
-        "2": { name: "Bedroom", state: { on: false } }
+        "1": { name: "Living Room", type: "Light", state: { on: true } },
+        "2": { name: "Bedroom", type: "Light", state: { on: false } }
       };
 
+      const mockSensors = {
+        "1": { name: "Temp Sensor", type: "ZHATemperature", state: { temperature: 2150 } }
+      };
+
+      let requestCount = 0;
       http.request = function(options, callback) {
+        requestCount++;
         const mockRes = {
           on: function(event, handler) {
             if (event === 'data') {
-              handler(JSON.stringify(mockLights));
+              const data = requestCount === 1 ? mockLights : mockSensors;
+              handler(JSON.stringify(data));
             } else if (event === 'end') {
               handler();
             }
@@ -139,8 +146,11 @@ describe('HueBridge', function() {
         };
       };
 
-      const lights = await bridge.loadAssets();
-      assert.deepStrictEqual(lights, mockLights);
+      const result = await bridge.loadAssets();
+      assert.ok(Array.isArray(result.lights));
+      assert.ok(Array.isArray(result.sensors));
+      assert.strictEqual(result.lights.length, 2);
+      assert.strictEqual(result.sensors.length, 1);
     });
 
     it('should throw error when not authenticated', async function() {
@@ -163,26 +173,30 @@ describe('HueBridge', function() {
       return fs.mkdtempSync(prefix);
     }
 
-    it('persists and loads credentials plus assets', async function() {
+    it('persists and loads credentials plus lights and sensors', async function() {
       const tempDir = makeTempDir();
       const creds = { bridgeIp: '192.168.1.2', username: 'user123' };
-      const assets = [{ id: 'sensor-1', type: 'temp' }];
+      const lights = [{ id: '1', name: 'Light 1', type: 'light' }];
+      const sensors = [{ id: '1', name: 'Sensor 1', type: 'ZHATemperature' }];
 
-      const bridge = new HueBridge(creds.bridgeIp, creds.username, assets);
+      const bridge = new HueBridge(creds.bridgeIp, creds.username, lights, sensors);
       await bridge.save(tempDir);
       const loaded = await HueBridge.load(tempDir);
 
       assert.ok(loaded);
       assert.strictEqual(loaded.bridgeIp, creds.bridgeIp);
       assert.strictEqual(loaded.username, creds.username);
-      assert.deepStrictEqual(loaded.assets, assets);
+      assert.deepStrictEqual(loaded.lights, lights);
+      assert.deepStrictEqual(loaded.sensors, sensors);
       const credsPath = path.join(tempDir, 'hue-credentials.json');
-      const assetsPath = path.join(tempDir, 'hue-assets.json');
+      const lightsPath = path.join(tempDir, 'hue-lights.json');
+      const sensorsPath = path.join(tempDir, 'hue-sensors.json');
       assert.ok(fs.existsSync(credsPath));
-      assert.ok(fs.existsSync(assetsPath));
+      assert.ok(fs.existsSync(lightsPath));
+      assert.ok(fs.existsSync(sensorsPath));
     });
 
-    it('load returns instance with empty assets when missing file', async function() {
+    it('load returns instance with empty lights and sensors when missing files', async function() {
       const tempDir = makeTempDir();
       const creds = { bridgeIp: '192.168.1.3', username: 'user456' };
       const credsPath = path.join(tempDir, 'hue-credentials.json');
@@ -192,7 +206,8 @@ describe('HueBridge', function() {
       assert.ok(bridge);
       assert.strictEqual(bridge.bridgeIp, creds.bridgeIp);
       assert.strictEqual(bridge.username, creds.username);
-      assert.deepStrictEqual(bridge.assets, []);
+      assert.deepStrictEqual(bridge.lights, []);
+      assert.deepStrictEqual(bridge.sensors, []);
     });
 
     it('load returns null when no credentials exist', async function() {
