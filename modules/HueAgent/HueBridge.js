@@ -2,21 +2,17 @@
 
 const http = require('http');
 const https = require('https');
-const fs = require('fs');
-const path = require('path');
 
 /**
  * HueBridge class for interacting with Philips Hue Bridge
  */
 class HueBridge {
-  static CREDENTIALS_FILE = 'hue-credentials.json';
-  static LIGHTS_FILE = 'hue-lights.json';
-  static SENSORS_FILE = 'hue-sensors.json';
-
   /**
    * Create a HueBridge instance
    * @param {string} bridgeIp - IP address of the Hue bridge
    * @param {string} username - API username (application key)
+   * @param {Array} lights - Array of light devices
+   * @param {Array} sensors - Array of sensor devices
    */
   constructor(bridgeIp, username = null, lights = [], sensors = []) {
     this.bridgeIp = bridgeIp;
@@ -24,44 +20,6 @@ class HueBridge {
     this.lights = Array.isArray(lights) ? lights : [];
     this.sensors = Array.isArray(sensors) ? sensors : [];
     this.baseUrl = `http://${bridgeIp}/api`;
-  }
-
-  /**
-   * Factory: Load from dataDir and create an authenticated HueBridge instance
-   * @param {string} dataDir - Directory containing hue-credentials.json
-   * @returns {Promise<HueBridge | null>} Authenticated bridge instance or null if credentials not found
-   */
-  static async load(dataDir) {
-    const credentialsPath = path.join(dataDir, HueBridge.CREDENTIALS_FILE);
-    const lightsPath = path.join(dataDir, HueBridge.LIGHTS_FILE);
-    const sensorsPath = path.join(dataDir, HueBridge.SENSORS_FILE);
-
-    try {
-      const text = await fs.promises.readFile(credentialsPath, 'utf8');
-      const creds = JSON.parse(text);
-
-      let lights = [];
-      try {
-        const lightsText = await fs.promises.readFile(lightsPath, 'utf8');
-        const parsedLights = JSON.parse(lightsText);
-        lights = Array.isArray(parsedLights) ? parsedLights : [];
-      } catch {
-        lights = [];
-      }
-
-      let sensors = [];
-      try {
-        const sensorsText = await fs.promises.readFile(sensorsPath, 'utf8');
-        const parsedSensors = JSON.parse(sensorsText);
-        sensors = Array.isArray(parsedSensors) ? parsedSensors : [];
-      } catch {
-        sensors = [];
-      }
-
-      return new HueBridge(creds.bridgeIp, creds.username, lights, sensors);
-    } catch {
-      return null;
-    }
   }
 
   /**
@@ -128,23 +86,6 @@ class HueBridge {
     } catch (error) {
       throw new Error(`Failed to load assets: ${error.message}`);
     }
-  }
-
-  /**
-   * Persist current bridge credentials, lights, and sensors to a directory
-   * @param {string} dataDir
-   * @returns {Promise<void>}
-   */
-  async save(dataDir) {
-    const creds = { bridgeIp: this.bridgeIp, username: this.username };
-    const credentialsPath = path.join(dataDir, HueBridge.CREDENTIALS_FILE);
-    const lightsPath = path.join(dataDir, HueBridge.LIGHTS_FILE);
-    const sensorsPath = path.join(dataDir, HueBridge.SENSORS_FILE);
-
-    await fs.promises.mkdir(dataDir, { recursive: true });
-    await fs.promises.writeFile(credentialsPath, JSON.stringify(creds, null, 2), 'utf8');
-    await fs.promises.writeFile(lightsPath, JSON.stringify(this.lights, null, 2), 'utf8');
-    await fs.promises.writeFile(sensorsPath, JSON.stringify(this.sensors, null, 2), 'utf8');
   }
 
   /**

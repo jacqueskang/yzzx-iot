@@ -3,6 +3,7 @@
 const { ModuleClient } = require("azure-iot-device");
 const { Mqtt: Transport } = require("azure-iot-device-mqtt");
 const HueBridge = require("./HueBridge");
+const HueBridgeRepository = require("./HueBridgeRepository");
 
 const MAX_RETRIES = 10;
 const RETRY_DELAY_MS = 5000;
@@ -50,11 +51,14 @@ function connectWithRetry(retryCount = 0) {
 
       console.log("HueAgent module client initialized");
 
+      const repository = new HueBridgeRepository(DATA_DIR);
+
       // Try to load persisted Hue bridge credentials
       (async () => {
         try {
-          hueBridge = await HueBridge.load(DATA_DIR);
-          if (hueBridge) {
+          const data = await repository.load();
+          if (data) {
+            hueBridge = new HueBridge(data.bridgeIp, data.username, data.lights, data.sensors);
             console.log(`Hue bridge loaded from saved credentials: ${hueBridge.bridgeIp}`);
           } else {
             console.warn("No saved Hue bridge credentials found. Call initialize direct method to pair.");
@@ -90,7 +94,7 @@ function connectWithRetry(retryCount = 0) {
           });
 
           // Persist credentials to /app/data
-          await hueBridge.save(DATA_DIR);
+          await repository.save(hueBridge);
 
           console.log(`Hue pairing completed: bridge=${hueBridge.bridgeIp} user=${hueBridge.username}`);
           response.send(200, { bridgeIp: hueBridge.bridgeIp, username: hueBridge.username }, (err) => {
@@ -123,7 +127,7 @@ function connectWithRetry(retryCount = 0) {
           const lights = await hueBridge.loadAssets();
           
           // Persist updated assets to /app/data
-          await hueBridge.save(DATA_DIR);
+          await repository.save(hueBridge);
 
           console.log(`Assets reloaded successfully: ${hueBridge.lights.length} lights and ${hueBridge.sensors.length} sensors found`);
           response.send(200, { lights: hueBridge.lights, sensors: hueBridge.sensors }, (err) => {
