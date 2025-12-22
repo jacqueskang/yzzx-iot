@@ -6,7 +6,10 @@ COPY package*.json ./
 
 RUN npm install --omit=dev
 
-COPY app.js ./
+COPY *.js ./
+
+# Persist credentials directory
+RUN mkdir -p /app/data && chown node:node /app/data
 
 USER node
 
