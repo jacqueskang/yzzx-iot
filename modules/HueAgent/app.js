@@ -4,13 +4,16 @@ const { ModuleClient } = require("azure-iot-device");
 const { Mqtt: Transport } = require("azure-iot-device-mqtt");
 const HueBridge = require("./HueBridge");
 const HueBridgeRepository = require("./HueBridgeRepository");
+const AssetMonitor = require("./AssetMonitor");
 
 const MAX_RETRIES = 10;
 const RETRY_DELAY_MS = 5000;
 const DATA_DIR = "/app/data";
 
 const DEVICE_NAME = process.env.IOTEDGE_DEVICEID || "unknown-device";
+const POLL_INTERVAL_MS = Number(process.env.HUE_POLL_INTERVAL_MS) || 10000;
 let hueBridge = null;
+let monitor = null;
 
 // Smoke test mode: allow container to start and exit cleanly in CI
 if (process.env.HUEAGENT_SMOKE_TEST === "1") {
@@ -59,6 +62,14 @@ function connectWithRetry(retryCount = 0) {
           hueBridge = await repository.load();
           if (hueBridge) {
             console.log(`Hue bridge loaded from saved credentials: ${hueBridge.bridgeIp}`);
+            
+            // Start monitoring
+            monitor = new AssetMonitor(hueBridge, client, {
+              dataDir: DATA_DIR,
+              pollIntervalMs: POLL_INTERVAL_MS,
+              outputName: 'hueEvents'
+            });
+            await monitor.start();
           } else {
             console.warn("No saved Hue bridge credentials found. Call initialize direct method to pair.");
           }
@@ -95,6 +106,16 @@ function connectWithRetry(retryCount = 0) {
           // Persist credentials to /app/data
           await repository.save(hueBridge);
 
+          // Start monitoring
+          if (!monitor) {
+            monitor = new AssetMonitor(hueBridge, client, {
+              dataDir: DATA_DIR,
+              pollIntervalMs: POLL_INTERVAL_MS,
+              outputName: 'hueEvents'
+            });
+            await monitor.start();
+          }
+
           console.log(`Hue pairing completed: bridge=${hueBridge.bridgeIp} user=${hueBridge.username}`);
           response.send(200, { bridgeIp: hueBridge.bridgeIp, username: hueBridge.username }, (err) => {
             if (err) {
@@ -115,34 +136,72 @@ function connectWithRetry(retryCount = 0) {
         }
       });
 
-      // Direct method to reload assets from the Hue bridge
-      client.onMethod("reload", async (request, response) => {
+      // Direct method to start monitoring
+      client.onMethod("startMonitoring", async (request, response) => {
         try {
           if (!hueBridge) {
             throw new Error('Hue bridge not initialized. Call initialize method first.');
           }
 
-          console.log("Reload method invoked: loading assets from Hue bridge");
-          await hueBridge.loadAssets();
-          
-          // Persist updated assets to /app/data
-          await repository.save(hueBridge);
+          if (monitor && monitor.isRunning()) {
+            throw new Error('Monitoring is already running.');
+          }
 
-          console.log(`Assets reloaded successfully: ${hueBridge.lights.length} lights and ${hueBridge.sensors.length} sensors found`);
-          response.send(200, { lights: hueBridge.lights, sensors: hueBridge.sensors }, (err) => {
+          console.log("StartMonitoring method invoked");
+          if (!monitor) {
+            monitor = new AssetMonitor(hueBridge, client, {
+              dataDir: DATA_DIR,
+              pollIntervalMs: POLL_INTERVAL_MS,
+              outputName: 'hueEvents'
+            });
+          }
+          await monitor.start();
+
+          console.log("Monitoring started successfully");
+          response.send(200, { status: "monitoring started" }, (err) => {
             if (err) {
-              console.error(`Failed sending reload response: ${err}`);
+              console.error(`Failed sending startMonitoring response: ${err}`);
             } else {
-              console.log("Reload response sent successfully");
+              console.log("StartMonitoring response sent successfully");
             }
           });
         } catch (error) {
-          console.error(`Asset reload failed: ${error.message}`);
+          console.error(`Start monitoring failed: ${error.message}`);
           response.send(500, { error: error.message }, (err) => {
             if (err) {
-              console.error(`Failed sending reload error response: ${err}`);
+              console.error(`Failed sending startMonitoring error response: ${err}`);
             } else {
-              console.log("Reload error response sent");
+              console.log("StartMonitoring error response sent");
+            }
+          });
+        }
+      });
+
+      // Direct method to stop monitoring
+      client.onMethod("stopMonitoring", async (request, response) => {
+        try {
+          if (!monitor || !monitor.isRunning()) {
+            throw new Error('Monitoring is not running.');
+          }
+
+          console.log("StopMonitoring method invoked");
+          monitor.stop();
+
+          console.log("Monitoring stopped successfully");
+          response.send(200, { status: "monitoring stopped" }, (err) => {
+            if (err) {
+              console.error(`Failed sending stopMonitoring response: ${err}`);
+            } else {
+              console.log("StopMonitoring response sent successfully");
+            }
+          });
+        } catch (error) {
+          console.error(`Stop monitoring failed: ${error.message}`);
+          response.send(500, { error: error.message }, (err) => {
+            if (err) {
+              console.error(`Failed sending stopMonitoring error response: ${err}`);
+            } else {
+              console.log("StopMonitoring error response sent");
             }
           });
         }
