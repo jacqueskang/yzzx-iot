@@ -1,0 +1,32 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+logs/
+*.swp
+*.swo
+*.tmp
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# Node.js
+node_modules/
+coverage/
+dist/
+
+# Env/Secrets
+.env
+.env.*
+
+# Azure Functions local settings (any functions subdir)
+functions/**/local.settings.json
+
+# Build caches
+.turbo/

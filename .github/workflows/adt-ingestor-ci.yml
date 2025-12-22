@@ -1,0 +1,49 @@
+name: ADT Ingestor CI
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "functions/adt-ingestor/**"
+      - ".github/workflows/adt-ingestor-*.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  WORKING_DIR: functions/adt-ingestor
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm install --no-fund --no-audit
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Build (type-check)
+        run: npm run build
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: Run unit tests
+        run: npm test
+        working-directory: ${{ env.WORKING_DIR }}

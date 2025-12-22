@@ -1,0 +1,11 @@
+# Build output
+/dist
+
+# Dependencies
+/node_modules
+
+# Local dev settings (do not commit)
+/local.settings.json
+
+# Logs
+npm-debug.log*
