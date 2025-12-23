@@ -30,3 +30,5 @@ functions/**/local.settings.json
 
 # Build caches
 .turbo/
+
+.terraform
