@@ -1,42 +1,17 @@
-# Deploying to Azure IoT Edge
+## yzzx-iot
 
-This guide explains how to deploy the `deployment.template.json` manifest to your Azure IoT Hub.
+This repository enables real-time data collection from diverse IoT devices in the "yzzx" environment using Azure IoT Edge. The data is sent to Azure IoT Hub and then ingested into Azure Digital Twins (ADT) for digital modeling and analytics.
 
-## Prerequisites
+**Project structure:**
 
-1. **Azure CLI** - Install from https://docs.microsoft.com/cli/azure/install-azure-cli
-2. **Azure IoT Extension** for Azure CLI
-3. **Azure Subscription** with an IoT Hub instance
-4. **IoT Edge Device** already registered in your IoT Hub
-5. **Azure Container Registry** credentials (optional, if using private images)
+- `modules/`: Contains Azure IoT Edge modules for connecting to different IoT devices and protocols.
+- `functions/`: Contains Azure Function code that processes incoming IoT Hub data and populates or updates Azure Digital Twins.
+- `infra/`: Terraform code for provisioning Azure resources (IoT Hub, Digital Twins, Function Apps, etc.).
+- Automation scripts for infrastructure deployment and device onboarding.
 
-## Installation
+**Data flow:**
+1. IoT devices send data to an Azure IoT Edge device running custom modules (see `modules/`).
+2. The IoT Edge device forwards data to Azure IoT Hub.
+3. Azure Functions (see `functions/`) process incoming messages and update Azure Digital Twins.
 
-### 1. Install Azure IoT Extension
-
-```bash
-az extension add --name azure-iot
-```
-
-## Deployment Steps
-
-### Deploy the Manifest
-
-Deploy to a specific device:
-
-```bash
-az login
-
-export IOTHUB_NAME="iot-jkang-sbx"
-export IOTHUB_RESOURCE_GROUP="rg-jkang-iot"
-export DEVICE_ID="pi4b"
-DEPLOY_TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
-DEPLOY_PRIORITY=$(date -u +"%s")
-
-az iot edge deployment create \
-  --deployment-id "yzzx-iot-${DEPLOY_TIMESTAMP}" \
-  --hub-name $IOTHUB_NAME \
-  --content "./config/deployment.arm64v8.json" \
-  --target-condition "deviceId='$DEVICE_ID'" \
-  --priority $DEPLOY_PRIORITY
-```
+This project is designed for rapid prototyping and management of IoT solutions using Azure cloud and edge technologies.
