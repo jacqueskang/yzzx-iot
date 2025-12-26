@@ -1,11 +1,3 @@
-resource "azurerm_iothub_shared_access_policy" "eventhub_receiver" {
-  name                = "functionapp-eventhub-receiver"
-  resource_group_name = azurerm_iothub.main.resource_group_name
-  iothub_name         = azurerm_iothub.main.name
-  # Only listen permission is required for Event Hub-compatible endpoint
-  service_connect     = true
-}
-// Shared access policy removed for RBAC-only configuration
 resource "azurerm_iothub" "main" {
   name                = "iot-${var.suffix}"
   resource_group_name = azurerm_resource_group.main.name
@@ -27,3 +19,18 @@ resource "azurerm_iothub" "main" {
     condition      = "true"
   }
 }
+
+resource "azurerm_iothub_shared_access_policy" "eventhub_receiver" {
+  name                = "functionapp-eventhub-receiver"
+  resource_group_name = azurerm_iothub.main.resource_group_name
+  iothub_name         = azurerm_iothub.main.name
+  service_connect     = true
+}
+
+resource "azurerm_iothub_consumer_group" "func_ingress" {
+  name                   = "func-ingress"
+  iothub_name            = azurerm_iothub.main.name
+  eventhub_endpoint_name = "events"
+  resource_group_name    = azurerm_resource_group.main.name
+}
+
