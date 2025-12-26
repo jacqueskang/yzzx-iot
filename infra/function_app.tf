@@ -15,8 +15,7 @@ resource "azurerm_function_app_flex_consumption" "main" {
   instance_memory_in_mb  = 512
 
   app_settings = {
-    WEBSITE_RUN_FROM_PACKAGE = "1"
-    ADT_URL                  = "https://${azurerm_digital_twins_instance.main.host_name}"
+    ADT_URL = "https://${azurerm_digital_twins_instance.main.host_name}"
   }
 
   site_config {
