@@ -20,4 +20,5 @@ if ! command -v func >/dev/null 2>&1; then
 fi
 
 cd "$REPO_ROOT/functions/adt-ingestor"
-func azure functionapp publish "$FUNCTIONAPP_NAME" --typescript
+echo "Using remote build (Oryx) for x64 compatibility and smaller upload."
+func azure functionapp publish "$FUNCTIONAPP_NAME" --typescript --build remote
