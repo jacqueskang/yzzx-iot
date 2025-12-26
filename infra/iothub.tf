@@ -2,9 +2,8 @@ resource "azurerm_iothub_shared_access_policy" "eventhub_receiver" {
   name                = "functionapp-eventhub-receiver"
   resource_group_name = azurerm_iothub.main.resource_group_name
   iothub_name         = azurerm_iothub.main.name
-  registry_read       = true
+  # Only listen permission is required for Event Hub-compatible endpoint
   service_connect     = true
-  device_connect      = true
 }
 // Shared access policy removed for RBAC-only configuration
 resource "azurerm_iothub" "main" {

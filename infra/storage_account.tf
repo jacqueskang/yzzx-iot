@@ -8,5 +8,5 @@ resource "azurerm_storage_account" "main" {
   min_tls_version                 = "TLS1_2"
   allow_nested_items_to_be_public = false
   tags                            = var.tags
-  shared_access_key_enabled       = false
+  shared_access_key_enabled       = true
 }

@@ -15,7 +15,7 @@ export function loadSettings(): Settings {
     .filter(Boolean);
 
   return {
-    eventHubConnection: process.env.EVENTHUB_CONNECTION || '',
+    eventHubConnection: process.env.EVENTHUB_CONNECTION_STRING || '',
     eventHubName: process.env.EVENTHUB_NAME || '',
     consumerGroup: process.env.EVENTHUB_CONSUMER_GROUP || '$Default',
     adtServiceUrl: process.env.ADT_SERVICE_URL || '',

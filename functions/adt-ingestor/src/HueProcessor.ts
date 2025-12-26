@@ -26,7 +26,7 @@ function classify(body: any): 'snapshot' | 'delta' | 'unknown' {
 }
 
 app.eventHub('HueProcessor', {
-  connection: 'EVENTHUB_CONNECTION',
+  connection: 'EVENTHUB_CONNECTION_STRING', // Must be the environment variable name
   eventHubName: settings.eventHubName,
   consumerGroup: settings.consumerGroup,
   cardinality: 'many',
