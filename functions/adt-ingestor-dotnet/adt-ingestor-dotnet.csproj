@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
-    <OutputType>Exe</OutputType>
+    <UsingMicrosoftAzureFunctionsSdk>true</UsingMicrosoftAzureFunctionsSdk>
   </PropertyGroup>
 
   <ItemGroup>
