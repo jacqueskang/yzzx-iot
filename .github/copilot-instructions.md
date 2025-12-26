@@ -1,4 +1,14 @@
+
 # GitHub Copilot Instructions
+
+## Repository Structure
+
+- **infra/**: Terraform IaC for Azure (Function App, IoT Hub, Digital Twins, etc.)
+- **functions/adt-ingestor/**: TypeScript Azure Function (src, test, config, connectors, core, telemetry)
+- **modules/HueAgent/**: Node.js IoT Edge module (source, tests, Dockerfiles)
+- **iotedge-layers/**: IoT Edge deployment manifests
+- **scripts/**: Bash scripts for deployment and automation
+- **deploy.sh**: Top-level deployment script
 
 ## Commit Message Format
 
@@ -41,11 +51,13 @@ fix(pipeline): specify Dockerfile.arm64v8 in build steps
 ci(workflow): update Node.js version to 24
 ```
 
+
 ## Guidelines
 - Keep subject line under 50 characters
 - Use imperative mood ("add" not "added")
 - Include scope when relevant (module/component name)
 - Add body for context when needed
+- Reference the correct folder/component in the scope (e.g., `infra`, `adt-ingestor`, `HueAgent`, `scripts`)
 
 ## Versioning
 
