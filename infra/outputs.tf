@@ -13,6 +13,6 @@ output "adt_host_name" {
 }
 
 output "function_app_name" {
-  value       = azurerm_linux_function_app.main.name
+  value       = azurerm_function_app_flex_consumption.main.name
   description = "Azure Function App name"
 }
