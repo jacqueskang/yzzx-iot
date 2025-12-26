@@ -1,24 +1,24 @@
-echo "Deploying adt-ingestor to Azure Function App: $FUNCTIONAPP_NAME"
-
 #!/bin/bash
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR/.."
 
-
 # Hard-coded Function App name
 FUNCTIONAPP_NAME="func-yzzx-iot"
 
-echo "Deploying adt-ingestor to Azure Function App: $FUNCTIONAPP_NAME"
+echo "Deploying adt-ingestor-dotnet to Azure Function App: $FUNCTIONAPP_NAME"
 
-# Check if func is available
-if ! command -v func >/dev/null 2>&1; then
-  echo "ERROR: Azure Functions Core Tools (func) is not installed or not in PATH."
-  echo "Install with: npm i -g azure-functions-core-tools@4 --unsafe-perm true"
-  exit 1
-fi
+cd "$REPO_ROOT/functions/adt-ingestor-dotnet"
+dotnet publish -c Release -o ./publish
 
-cd "$REPO_ROOT/functions/adt-ingestor"
-echo "Using remote build (Oryx) for x64 compatibility and smaller upload."
-func azure functionapp publish "$FUNCTIONAPP_NAME" --typescript --build remote
+# Deploy using Azure CLI (assumes az login and correct subscription)
+az functionapp deployment source config-zip \
+  --name "$FUNCTIONAPP_NAME" \
+  --resource-group "$(jq -r .resource_group_name $REPO_ROOT/infra/terraform.tfvars.json 2>/dev/null || echo <your-resource-group>)" \
+  --src ./publish.zip
+
+# Zip the publish output
+cd ./publish
+zip -r ../publish.zip .
+cd ..
