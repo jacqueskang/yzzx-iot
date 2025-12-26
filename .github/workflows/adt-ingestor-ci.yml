@@ -6,18 +6,19 @@ on:
     paths:
       - "functions/adt-ingestor/**"
       - ".github/workflows/adt-ingestor-*.yml"
-
-permissions:
-  contents: read
-  pull-requests: write
-
-env:
-  WORKING_DIR: functions/adt-ingestor
+  push:
+    branches: [ main ]
+    paths:
+      - "functions/adt-ingestor-dotnet/**"
+      - ".github/workflows/adt-ingestor-*.yml"
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  build-and-publish-dotnet:
+    name: Build & Publish (.NET)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions/adt-ingestor-dotnet
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -25,25 +26,25 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Use Node.js 22
-        uses: actions/setup-node@v6
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          node-version: 22
-          cache: 'npm'
-          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          dotnet-version: '8.0.x'
 
-      - name: Install dependencies
-        run: npm install --no-fund --no-audit
-        working-directory: ${{ env.WORKING_DIR }}
+      - name: Restore dependencies
+        run: dotnet restore
 
-      - name: Run ESLint
-        run: npm run lint
-        working-directory: ${{ env.WORKING_DIR }}
+      - name: Build and publish for linux-x64
+        run: dotnet publish -c Release -r linux-x64 --self-contained false -o ./publish
 
-      - name: Build (type-check)
-        run: npm run build
-        working-directory: ${{ env.WORKING_DIR }}
+      - name: Zip publish output
+        run: zip -r publish.zip .
+        working-directory: functions/adt-ingestor-dotnet/publish
 
-      - name: Run unit tests
-        run: npm test
-        working-directory: ${{ env.WORKING_DIR }}
+      - name: Deploy to Azure Function App
+        if: github.event_name != 'pull_request'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: func-yzzx-iot
+          package: functions/adt-ingestor-dotnet/publish.zip
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
