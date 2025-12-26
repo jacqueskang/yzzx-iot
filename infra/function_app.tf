@@ -1,11 +1,11 @@
 resource "azurerm_linux_function_app" "main" {
-  name                        = "func-${var.suffix}"
-  location                    = azurerm_resource_group.main.location
-  resource_group_name         = azurerm_resource_group.main.name
-  service_plan_id             = azurerm_service_plan.main.id
-  storage_account_name        = azurerm_storage_account.main.name
+  name                          = "func-${var.suffix}"
+  location                      = azurerm_resource_group.main.location
+  resource_group_name           = azurerm_resource_group.main.name
+  service_plan_id               = azurerm_service_plan.main.id
+  storage_account_name          = azurerm_storage_account.main.name
   storage_uses_managed_identity = true
-  functions_extension_version = "~4"
+  functions_extension_version   = "~4"
 
   identity {
     type = "SystemAssigned"
@@ -16,7 +16,9 @@ resource "azurerm_linux_function_app" "main" {
     application_stack {
       node_version = "22"
     }
-    minimum_tls_version = "1.2"
+    minimum_tls_version                    = "1.2"
+    application_insights_key               = azurerm_application_insights.main.instrumentation_key
+    application_insights_connection_string = azurerm_application_insights.main.connection_string
   }
 
   app_settings = {
