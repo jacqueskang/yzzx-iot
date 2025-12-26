@@ -38,7 +38,7 @@ jobs:
         run: dotnet publish -c Release -r linux-x64 --self-contained false -o ./publish
 
       - name: Zip publish output
-        run: zip -r publish.zip .
+        run: zip -r ../publish.zip .
         working-directory: functions/adt-ingestor-dotnet/publish
 
       - name: Deploy to Azure Function App
