@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+*.local
+coverage/
+.vscode/
+test/
+local.settings.json
+npm-debug.log*
