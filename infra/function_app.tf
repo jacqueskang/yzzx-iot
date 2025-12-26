@@ -15,7 +15,10 @@ resource "azurerm_function_app_flex_consumption" "main" {
   instance_memory_in_mb  = 512
 
   app_settings = {
-    ADT_URL = "https://${azurerm_digital_twins_instance.main.host_name}"
+    ADT_URL                    = "https://${azurerm_digital_twins_instance.main.host_name}"
+    EVENTHUB_NAME              = azurerm_iothub.main.event_hub_events_path
+    EVENTHUB_CONSUMER_GROUP    = "$Default"
+    EVENTHUB_CONNECTION_STRING = azurerm_iothub_shared_access_policy.eventhub_receiver.primary_connection_string
   }
 
   site_config {
@@ -30,4 +33,10 @@ resource "azurerm_function_app_flex_consumption" "main" {
   }
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [
+      tags["hidden-link:/app-insights-resource-id"]
+    ]
+  }
 }
