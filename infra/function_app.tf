@@ -16,7 +16,7 @@ resource "azurerm_function_app_flex_consumption" "main" {
   instance_memory_in_mb  = 512
 
   app_settings = {
-    ADT_URL                 = "https://${azurerm_digital_twins_instance.main.host_name}"
+    ADT_SERVICE_URL         = "https://${azurerm_digital_twins_instance.main.host_name}"
     EVENTHUB_NAME           = azurerm_iothub.main.event_hub_events_path
     EVENTHUB_CONSUMER_GROUP = azurerm_iothub_consumer_group.func_ingress.name
     EVENTHUB_CONNECTION_STRING = join("", [
