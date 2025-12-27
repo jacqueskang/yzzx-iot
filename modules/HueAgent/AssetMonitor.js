@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Message } = require('azure-iot-device');
+const logger = require('./logger');
 
 /**
  * Monitors HueBridge assets for changes and sends IoT messages
@@ -38,7 +39,7 @@ class AssetMonitor {
    */
   async start() {
     if (this.#isRunning) {
-      console.warn('AssetMonitor already running');
+      logger.logWarn('AssetMonitor already running');
       return;
     }
 
@@ -51,16 +52,16 @@ class AssetMonitor {
         await this.bridge.loadAssets();
         this.#previousState = this.#cloneCurrentState();
         await this.#saveState();
-        console.log('AssetMonitor: Initial baseline established');
+        logger.logInfo('AssetMonitor: Initial baseline established');
       } catch (error) {
-        console.error(`AssetMonitor: Failed to establish baseline: ${error.message}`);
+        logger.logError(`AssetMonitor: Failed to establish baseline: ${error.message}`);
         return;
       }
     }
 
     this.#isRunning = true;
     this.#interval = setInterval(() => this.#poll(), this.pollIntervalMs);
-    console.log(`AssetMonitor started: polling every ${this.pollIntervalMs}ms`);
+    logger.logInfo(`AssetMonitor started: polling every ${this.pollIntervalMs}ms`);
   }
 
   /**
@@ -72,7 +73,7 @@ class AssetMonitor {
       this.#interval = null;
     }
     this.#isRunning = false;
-    console.log('AssetMonitor stopped');
+    logger.logInfo('AssetMonitor stopped');
   }
 
   /**
@@ -95,7 +96,7 @@ class AssetMonitor {
       clearInterval(this.#interval);
       this.#interval = null;
     }
-    console.log('AssetMonitor paused');
+    logger.logInfo('AssetMonitor paused');
     return true;
   }
 
@@ -106,7 +107,7 @@ class AssetMonitor {
   async resume() {
     if (this.#isRunning && !this.#interval) {
       this.#interval = setInterval(() => this.#poll(), this.pollIntervalMs);
-      console.log('AssetMonitor resumed');
+      logger.logInfo('AssetMonitor resumed');
     }
   }
 
@@ -123,7 +124,7 @@ class AssetMonitor {
         sensors: this.bridge.sensors
       };
     } catch (error) {
-      console.error(`AssetMonitor: Failed to capture snapshot: ${error.message}`);
+      logger.logError(`AssetMonitor: Failed to capture snapshot: ${error.message}`);
       throw error;
     }
   }
@@ -140,13 +141,13 @@ class AssetMonitor {
       
       if (changes.length > 0) {
         await this.#sendEvent(changes);
-        console.log(`AssetMonitor: Detected ${changes.length} change(s)`);
+        logger.logInfo(`AssetMonitor: Detected ${changes.length} change(s)`);
       }
       
       this.#previousState = currentState;
       await this.#saveState();
     } catch (error) {
-      console.error(`AssetMonitor poll error: ${error.message}`);
+      logger.logError(`AssetMonitor poll error: ${error.message}`);
     }
   }
 
@@ -280,7 +281,7 @@ class AssetMonitor {
     return new Promise((resolve, reject) => {
       this.client.sendOutputEvent(this.outputName, message, (err) => {
         if (err) {
-          console.error(`Failed to send event: ${err.message}`);
+          logger.logError(`Failed to send event: ${err.message}`);
           reject(err);
         } else {
           resolve();
@@ -302,7 +303,7 @@ class AssetMonitor {
     return new Promise((resolve, reject) => {
       this.client.sendOutputEvent(this.outputName, message, (err) => {
         if (err) {
-          console.error(`Failed to send snapshot: ${err.message}`);
+          logger.logError(`Failed to send snapshot: ${err.message}`);
           reject(err);
         } else {
           resolve();
