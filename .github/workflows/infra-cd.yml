@@ -1,0 +1,50 @@
+name: infra CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+
+jobs:
+  terraform-cd:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Init
+        run: terraform init
+        env:
+          ARM_CLIENT_ID: a5e1bd80-d295-419d-8586-39dbbc1e615b
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: 673b4b78-11f8-4da7-8199-8a3ca1545cf1
+          ARM_TENANT_ID: d6bc13d4-9f71-4cce-a8cf-87039d919f0c
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        env:
+          ARM_CLIENT_ID: a5e1bd80-d295-419d-8586-39dbbc1e615b
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: 673b4b78-11f8-4da7-8199-8a3ca1545cf1
+          ARM_TENANT_ID: d6bc13d4-9f71-4cce-a8cf-87039d919f0c
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        env:
+          ARM_CLIENT_ID: a5e1bd80-d295-419d-8586-39dbbc1e615b
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: 673b4b78-11f8-4da7-8199-8a3ca1545cf1
+          ARM_TENANT_ID: d6bc13d4-9f71-4cce-a8cf-87039d919f0c
