@@ -37,6 +37,11 @@ jobs:
       - name: Build and publish for linux-x64
         run: dotnet publish -c Release -r linux-x64 --self-contained false -o ./publish
 
+      - name: Zip published output
+        run: |
+          cd publish
+          zip -r ../publish.zip .
+
       - name: Deploy to Azure Function App
         uses: Azure/functions-action@v1
         with:
