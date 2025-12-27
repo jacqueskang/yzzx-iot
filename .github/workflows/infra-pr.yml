@@ -35,9 +35,19 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan -no-color
+        id: plan
+        run: terraform plan -no-color -out=tfplan.txt > plan.log || true
         env:
           ARM_CLIENT_ID: a5e1bd80-d295-419d-8586-39dbbc1e615b
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: 673b4b78-11f8-4da7-8199-8a3ca1545cf1
           ARM_TENANT_ID: d6bc13d4-9f71-4cce-a8cf-87039d919f0c
+
+      - name: Check for Terraform changes and comment
+        if: always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: infra/plan.log
+          header: "Terraform Plan Output"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
