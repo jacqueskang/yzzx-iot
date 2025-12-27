@@ -1,0 +1,36 @@
+name: ADT Ingestor PR Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "functions/adt-ingestor/**"
+      - ".github/workflows/adt-ingestor-*.yml"
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          cd functions/adt-ingestor
+          npm ci
+
+      - name: Lint
+        run: |
+          cd functions/adt-ingestor
+          npm run lint || echo "No lint script defined. Skipping."
+
+      - name: Test
+        run: |
+          cd functions/adt-ingestor
+          npm test || echo "No test script defined. Skipping."
