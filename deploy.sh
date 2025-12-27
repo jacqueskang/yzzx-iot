@@ -15,12 +15,12 @@ else
   echo "Skipping Azure infrastructure deployment."
 fi
 
-# --- PART 2: Deploy adt-ingestor to Function App ---
-read -p "[2/4] Deploy adt-ingestor to Function App? (y/n): " REPLY_ADT
-if [[ "$REPLY_ADT" =~ ^[Yy]$ ]]; then
-  ./scripts/deploy_adt_ingestor.sh
+# --- PART 2: Deploy Function App ---
+read -p "[2/4] Deploy Function App? (y/n): " REPLY_FUNCTION_APP
+if [[ "$REPLY_FUNCTION_APP" =~ ^[Yy]$ ]]; then
+  ./scripts/deploy_function_app.sh
 else
-  echo "Skipping adt-ingestor deployment."
+  echo "Skipping function app deployment."
 fi
 
 # --- PART 3: Create IoT Edge Device ---

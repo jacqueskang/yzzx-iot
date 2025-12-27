@@ -1,0 +1,25 @@
+name: ADT Ingestor CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "functions/adt-ingestor/**"
+      - ".github/workflows/adt-ingestor-*.yml"
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Azure Function App
+        uses: Azure/functions-action@v1
+        with:
+          app-name: func-yzzx-iot
+          package: functions/adt-ingestor
+          sku: flexconsumption
+          remote-build: true
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
