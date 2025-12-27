@@ -30,9 +30,9 @@ jobs:
         run: npm ci
         working-directory: functions/adt-ingestor
 
-      - name: Build (if needed)
-        run: npm run build || echo "No build script"
-        working-directory: functions/adt-ingestor
+      # - name: Build (if needed)
+      #   run: npm run build || echo "No build script"
+      #   working-directory: functions/adt-ingestor
 
       - name: Deploy to Azure Function App
         uses: Azure/functions-action@v1
