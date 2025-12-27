@@ -1,6 +1,5 @@
 import { app, InvocationContext } from '@azure/functions';
 import { loadSettings } from '../config/settings.js';
-import { logger } from '../telemetry/logger.js';
 import { pickConnector } from '../core/router.js';
 import { getAdtClient } from '../core/adtClient.js';
 import { executeOps } from '../core/adtService.js';
@@ -44,7 +43,7 @@ app.eventHub('HueProcessor', {
 				const props = extractProps(event);
 				const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
 
-				logger.info('Processing event', {
+				context.info('Processing event', {
 					index: idx,
 					deviceId: props.deviceId,
 					moduleId: props.moduleId,
@@ -55,25 +54,30 @@ app.eventHub('HueProcessor', {
 
 				const connector = pickConnector(body, props, settings.sourcesEnabled);
 				if (!connector) {
-					logger.warn('No connector matched message; skipping', { index: idx, deviceId: props.deviceId });
+					context.warn('No connector matched message; skipping', { index: idx, deviceId: props.deviceId });
 					continue;
 				}
 
 				const kind = classify(body);
-				logger.debug('Event classified', { index: idx, kind, deviceId: props.deviceId });
+				context.log('Event classified', { index: idx, kind, deviceId: props.deviceId });
 
 				let ops;
 				if (kind === 'snapshot') {
-					logger.debug('Invoking onSnapshot', { index: idx });
+					context.log('Invoking onSnapshot', { index: idx });
 					ops = connector.onSnapshot(body, props);
 				} else {
-					logger.debug('Invoking onDelta', { index: idx });
+					context.log('Invoking onDelta', { index: idx });
 					ops = connector.onDelta(body, props);
 				}
 
-				logger.debug('Executing operations', { index: idx, opsCount: Array.isArray(ops) ? ops.length : 1 });
-				await executeOps(client, ops, { maxRetries: settings.maxRetries, retryBaseMs: settings.retryBaseMs });
-				logger.info('Event processed successfully', {
+				context.log('Executing operations', { index: idx, opsCount: Array.isArray(ops) ? ops.length : 1 });
+				await executeOps(
+					client,
+					ops,
+					{ maxRetries: settings.maxRetries, retryBaseMs: settings.retryBaseMs },
+					context
+				);
+				context.info('Event processed successfully', {
 					index: idx,
 					deviceId: props.deviceId,
 					moduleId: props.moduleId,
@@ -81,12 +85,11 @@ app.eventHub('HueProcessor', {
 					opsCount: Array.isArray(ops) ? ops.length : 1
 				});
 			} catch (err: any) {
-				logger.error('Failed to process event', {
+				context.error('Failed to process event', {
 					index: idx,
 					error: err,
 					event
 				});
-				context.log('Failed to process event', err);
 				// Let Functions runtime move to poison handling after retries.
 				throw err;
 			}

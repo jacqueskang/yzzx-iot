@@ -1,10 +1,15 @@
+
 import { DigitalTwinsClient } from '@azure/digital-twins-core';
 import { AdtOperation } from './operations.js';
-import { logger } from '../telemetry/logger.js';
+import type { InvocationContext } from '@azure/functions';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-export async function executeOps(client: DigitalTwinsClient, ops: AdtOperation[], options?: { maxRetries?: number; retryBaseMs?: number }) {
+export async function executeOps(
+  client: DigitalTwinsClient,
+  ops: AdtOperation[],
+  options: { maxRetries?: number; retryBaseMs?: number },
+  context: InvocationContext
+) {
   const maxRetries = options?.maxRetries ?? 5;
   const baseMs = options?.retryBaseMs ?? 500;
 
@@ -51,12 +56,12 @@ export async function executeOps(client: DigitalTwinsClient, ops: AdtOperation[]
         const retriable = [408, 429, 500, 502, 503, 504].includes(status) || err?.name === 'RestError';
         if (retriable && attempt < maxRetries) {
           const backoff = Math.min(8000, baseMs * Math.pow(2, attempt));
-          logger.warn('ADT op failed, retrying', { type: op.type, attempt, status });
+          context.warn('ADT op failed, retrying', { type: op.type, attempt, status });
           await sleep(backoff);
           attempt++;
           continue;
         }
-        logger.error('ADT op failed permanently', { type: op.type, status, error: String(err) });
+        context.error('ADT op failed permanently', { type: op.type, status, error: String(err) });
         throw err;
       }
     }
