@@ -40,4 +40,5 @@ jobs:
           app-name: func-yzzx-iot
           package: functions/adt-ingestor
           sku: flexconsumption
+          remote-build: true
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
