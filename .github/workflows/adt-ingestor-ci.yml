@@ -17,30 +17,27 @@ jobs:
     name: Build & Deploy (.NET)
     runs-on: ubuntu-latest
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          dotnet-version: "10.0.x"
+          node-version: '20.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
-        working-directory: functions/adt-ingestor-dotnet
+      - name: Install dependencies
+        run: npm ci
+        working-directory: functions/adt-ingestor
 
-      - name: Build and publish
-        run: dotnet publish -c Release --self-contained false -o publish
-        working-directory: functions/adt-ingestor-dotnet
-
-      - name: Zip published output
-        run: zip -r publish.zip .
-        working-directory: functions/adt-ingestor-dotnet/publish
+      - name: Build (if needed)
+        run: npm run build || echo "No build script"
+        working-directory: functions/adt-ingestor
 
       - name: Deploy to Azure Function App
         uses: Azure/functions-action@v1
         with:
           app-name: func-yzzx-iot
-          package: functions/adt-ingestor-dotnet/publish/publish.zip
-          sku: flexconsumption # Parameter required when using a publish profile with Flex Consumption
+          package: functions/adt-ingestor
+          sku: flexconsumption
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}

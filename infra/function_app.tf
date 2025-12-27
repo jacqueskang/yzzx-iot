@@ -9,15 +9,13 @@ resource "azurerm_function_app_flex_consumption" "main" {
   storage_authentication_type = "StorageAccountConnectionString"
   storage_access_key          = azurerm_storage_account.main.primary_access_key
 
-  runtime_name    = "dotnet-isolated"
-  runtime_version = "10.0"
+  runtime_name    = "node"
+  runtime_version = "20"
 
   maximum_instance_count = 40
   instance_memory_in_mb  = 512
 
   app_settings = {
-    SCM_DO_BUILD_DURING_DEPLOYMENT = "false"
-    ENABLE_ORYX_BUILD              = "false"
     ADT_URL                        = "https://${azurerm_digital_twins_instance.main.host_name}"
     EVENTHUB_NAME                  = azurerm_iothub.main.event_hub_events_path
     EVENTHUB_CONSUMER_GROUP        = azurerm_iothub_consumer_group.func_ingress.name
@@ -44,7 +42,7 @@ resource "azurerm_function_app_flex_consumption" "main" {
 
   lifecycle {
     ignore_changes = [
-      tags["hidden-link:/app-insights-resource-id"]
+      tags["hidden-link: /app-insights-resource-id"]
     ]
   }
 }
