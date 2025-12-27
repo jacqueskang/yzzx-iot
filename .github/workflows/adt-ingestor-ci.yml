@@ -1,14 +1,13 @@
-
 name: ADT Ingestor CI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - "functions/adt-ingestor/**"
       - ".github/workflows/adt-ingestor-*.yml"
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - "functions/adt-ingestor-dotnet/**"
       - ".github/workflows/adt-ingestor-*.yml"
@@ -24,7 +23,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: "10.0.x"
 
       - name: Restore dependencies
         run: dotnet restore
@@ -39,4 +38,5 @@ jobs:
         with:
           app-name: func-yzzx-iot
           package: functions/adt-ingestor-dotnet/publish
+          sku: flexconsumption # Parameter required when using a publish profile with Flex Consumption
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
