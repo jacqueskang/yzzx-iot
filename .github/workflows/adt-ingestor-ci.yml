@@ -38,6 +38,12 @@ jobs:
         run: zip -r ../publish.zip .
         working-directory: functions/adt-ingestor-dotnet/publish
 
+      - name: Debug - List and check publish.zip
+        run: |
+          ls -lh functions/adt-ingestor-dotnet/
+          file functions/adt-ingestor-dotnet/publish.zip || echo 'file command not available'
+          unzip -l functions/adt-ingestor-dotnet/publish.zip || echo 'unzip not available'
+
       - name: Deploy to Azure Function App
         uses: Azure/functions-action@v1
         with:
