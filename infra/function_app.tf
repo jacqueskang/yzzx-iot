@@ -10,7 +10,7 @@ resource "azurerm_function_app_flex_consumption" "main" {
   storage_access_key          = azurerm_storage_account.main.primary_access_key
 
   runtime_name    = "dotnet-isolated"
-  runtime_version = "8.0"
+  runtime_version = "10.0"
 
   maximum_instance_count = 40
   instance_memory_in_mb  = 512
