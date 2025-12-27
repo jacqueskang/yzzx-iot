@@ -1,26 +1,24 @@
 #!/bin/bash
 set -euo pipefail
 
-# Deploy the TypeScript ADT Ingestor Azure Function
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Hardcoded deployment parameters
+RESOURCE_GROUP="rg-yzzx-iot"
 FUNCTION_APP_NAME="func-yzzx-iot"
-FUNCTION_APP_PATH="$REPO_ROOT/functions/adt-ingestor"
 
-if [ ! -d "$FUNCTION_APP_PATH" ]; then
-  echo "Error: $FUNCTION_APP_PATH does not exist."
-  exit 1
-fi
+echo "[INFO] Deploying Function App: $FUNCTION_APP_NAME to Resource Group: $RESOURCE_GROUP"
 
-# Build the function app (if needed)
-cd "$FUNCTION_APP_PATH"
-echo "Installing dependencies for adt-ingestor..."
-npm ci
+PROJECT_DIR="$(cd "$(dirname "$0")/../functions/adt-ingestor" && pwd)"
 
-echo "Building adt-ingestor..."
-npm run build || true # If no build script, continue
+echo "[INFO] Creating deployment zip..."
+rm -f functionapp.zip
+zip -r functionapp.zip . -x "test/*" "node_modules/*" "functionapp.zip"
+popd > /dev/null
 
-# Publish to Azure (assumes az login and publish profile are set)
-echo "Deploying adt-ingestor to Azure Function App: $FUNCTION_APP_NAME"
-func azure functionapp publish "$FUNCTION_APP_NAME" --typescript --csharp
+echo "[INFO] Deploying to Azure Function App with remote build..."
+az functionapp deployment source config-zip \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$FUNCTION_APP_NAME" \
+  --src "functionapp.zip" \
+  --build-remote true
 
-echo "Deployment of adt-ingestor complete."
+echo "[SUCCESS] Deployment complete."

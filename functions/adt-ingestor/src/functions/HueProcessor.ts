@@ -39,22 +39,53 @@ app.eventHub('HueProcessor', {
 
 		const client = getAdtClient(adtUrl);
 
-		for (const event of (events as any[])) {
+		for (const [idx, event] of (events as any[]).entries()) {
 			try {
 				const props = extractProps(event);
 				const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
 
+				logger.info('Processing event', {
+					index: idx,
+					deviceId: props.deviceId,
+					moduleId: props.moduleId,
+					outputName: props.outputName,
+					bodyType: typeof body,
+					bodyKeys: body && typeof body === 'object' ? Object.keys(body) : undefined
+				});
+
 				const connector = pickConnector(body, props, settings.sourcesEnabled);
 				if (!connector) {
-					logger.debug('No connector matched message; skipping', { props });
+					logger.warn('No connector matched message; skipping', { index: idx, deviceId: props.deviceId });
 					continue;
 				}
 
 				const kind = classify(body);
-				const ops = kind === 'snapshot' ? connector.onSnapshot(body, props) : connector.onDelta(body, props);
+				logger.debug('Event classified', { index: idx, kind, deviceId: props.deviceId });
+
+				let ops;
+				if (kind === 'snapshot') {
+					logger.debug('Invoking onSnapshot', { index: idx });
+					ops = connector.onSnapshot(body, props);
+				} else {
+					logger.debug('Invoking onDelta', { index: idx });
+					ops = connector.onDelta(body, props);
+				}
+
+				logger.debug('Executing operations', { index: idx, opsCount: Array.isArray(ops) ? ops.length : 1 });
 				await executeOps(client, ops, { maxRetries: settings.maxRetries, retryBaseMs: settings.retryBaseMs });
-				logger.info('Processed message', { deviceId: props.deviceId, moduleId: props.moduleId, kind });
+				logger.info('Event processed successfully', {
+					index: idx,
+					deviceId: props.deviceId,
+					moduleId: props.moduleId,
+					kind,
+					opsCount: Array.isArray(ops) ? ops.length : 1
+				});
 			} catch (err: any) {
+				logger.error('Failed to process event', {
+					index: idx,
+					error: err,
+					event
+				});
 				context.log('Failed to process event', err);
 				// Let Functions runtime move to poison handling after retries.
 				throw err;
