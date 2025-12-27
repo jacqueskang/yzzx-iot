@@ -36,7 +36,9 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -out=tfplan.txt > plan.log || true
+        run: |
+          terraform plan -no-color -out=tfplan.txt > full_plan.log || true
+          grep -A30 "Terraform will perform the following actions:" full_plan.log > plan.log || echo "No changes detected." > plan.log
         env:
           ARM_CLIENT_ID: a5e1bd80-d295-419d-8586-39dbbc1e615b
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
@@ -48,6 +50,6 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: infra/plan.log
-          header: "Terraform Plan Output"
+          header: "Terraform Plan Summary"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
