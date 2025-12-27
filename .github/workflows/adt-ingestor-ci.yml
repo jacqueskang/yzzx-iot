@@ -1,3 +1,4 @@
+
 name: ADT Ingestor CI
 
 on:
@@ -13,18 +14,12 @@ on:
       - ".github/workflows/adt-ingestor-*.yml"
 
 jobs:
-  build-and-publish-dotnet:
-    name: Build & Publish (.NET)
+  build-and-deploy-dotnet:
+    name: Build & Deploy (.NET)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: functions/adt-ingestor-dotnet
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
+        uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -33,18 +28,19 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+        working-directory: functions/adt-ingestor-dotnet
 
-      - name: Build and publish for linux-x64
-        run: dotnet publish -c Release -r linux-x64 --self-contained false -o ./publish
+      - name: Build and publish
+        run: dotnet publish -c Release -r linux-x64 --self-contained false -o publish
+        working-directory: functions/adt-ingestor-dotnet
 
       - name: Zip published output
-        run: |
-          cd publish
-          zip -r ../publish.zip .
+        run: zip -r publish.zip .
+        working-directory: functions/adt-ingestor-dotnet/publish
 
       - name: Deploy to Azure Function App
         uses: Azure/functions-action@v1
         with:
           app-name: func-yzzx-iot
-          package: functions/adt-ingestor-dotnet/publish.zip
+          package: ${{ github.workspace }}/functions/adt-ingestor-dotnet/publish.zip
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
