@@ -28,7 +28,7 @@
     "prettier": "^3.7.4",
     "semantic-release": "^25.0.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "5.3"
   },
   "dependencies": {
     "azure-iot-device": "^1.17.9",
