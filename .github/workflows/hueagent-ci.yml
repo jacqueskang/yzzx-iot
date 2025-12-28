@@ -32,7 +32,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-fund --no-audit
-        working-directory: ${{ env.WORKING_DIR }}        
+        working-directory: ${{ env.WORKING_DIR }}
+
+      - name: TypeScript Build
+        run: npm run build
+        working-directory: ${{ env.WORKING_DIR }}
 
       - name: Run semantic-release
         id: release
