@@ -18,7 +18,7 @@ export const HueLightModel = {
     { "@type": "Property", "name": "mode", "schema": "string" },
     { "@type": "Property", "name": "reachable", "schema": "boolean" },
     {
-      "@type": "Property", "name": "_metadata", "schema": {
+      "@type": "Property", "name": "metadata", "schema": {
         "@type": "Map",
         "mapKey": { "name": "key", "schema": "string" },
         "mapValue": { "name": "value", "schema": "string" }

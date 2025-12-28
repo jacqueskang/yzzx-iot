@@ -20,12 +20,12 @@ export const HueConnector: Connector = {
     for (const l of event?.lights || []) {
       const ltId = lightTwinId(String(l.id));
       const state = l.state || {};
-      // Collect all non-state properties into _metadata
-      const _metadata: Record<string, string> = {};
+      // Collect all non-state properties into metadata
+      const metadata: Record<string, string> = {};
       for (const key of [
         'name', 'type', 'modelid', 'manufacturername', 'productname', 'uniqueid',
         'swversion', 'swconfigid', 'productid', 'lastSeen', 'status']) {
-        if (l[key] != null) _metadata[key] = String(l[key]);
+        if (l[key] != null) metadata[key] = String(l[key]);
       }
       ops.push({
         type: 'UpsertTwin',
@@ -40,7 +40,7 @@ export const HueConnector: Connector = {
           colormode: state.colormode,
           mode: state.mode,
           reachable: state.reachable,
-          _metadata
+          metadata
         }
       });
     }
