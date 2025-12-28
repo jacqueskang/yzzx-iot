@@ -1,5 +1,5 @@
 import type { AdtOperation } from '../../core/operations.js';
-import { HueModels, ModelIds, bridgeTwinId, lightTwinId, sensorTwinId, containsRelId } from './hueModels.js';
+import { HueModels, ModelIds, lightTwinId, sensorTwinId } from './hueModels.js';
 import { AssetSnapshotEvent, AssetChangeEvent } from '../../models/AssetEvent.js';
 
 export interface Connector {
@@ -12,17 +12,9 @@ export const HueConnector: Connector = {
   key: 'hue',
   onSnapshot: (body: AssetSnapshotEvent) => {
     const ts = body?.timestamp || new Date().toISOString();
-    const bTwinId = bridgeTwinId('hue-bridge');
     const ops: AdtOperation[] = [];
     // Ensure models exist
     ops.push({ type: 'EnsureModels', models: HueModels });
-    // Upsert bridge twin
-    ops.push({
-      type: 'UpsertTwin',
-      twinId: bTwinId,
-      modelId: ModelIds.bridge,
-      properties: { deviceId: 'hue-bridge', lastSnapshot: ts, lastSeen: ts }
-    });
     // Lights
     for (const l of body?.lights || []) {
       const ltId = lightTwinId(String(l.id));
@@ -31,13 +23,6 @@ export const HueConnector: Connector = {
         twinId: ltId,
         modelId: ModelIds.light,
         properties: { name: l.name, stateJson: JSON.stringify(l.state ?? {}), lastSeen: ts }
-      });
-      ops.push({
-        type: 'UpsertRelationship',
-        srcTwinId: bTwinId,
-        relationshipId: containsRelId('light', String(l.id)),
-        relationshipName: 'contains',
-        targetTwinId: ltId
       });
     }
     // Sensors
@@ -49,28 +34,17 @@ export const HueConnector: Connector = {
         modelId: ModelIds.sensor,
         properties: { name: s.name, stateJson: JSON.stringify(s.state ?? {}), lastSeen: ts }
       });
-      ops.push({
-        type: 'UpsertRelationship',
-        srcTwinId: bTwinId,
-        relationshipId: containsRelId('sensor', String(s.id)),
-        relationshipName: 'contains',
-        targetTwinId: stId
-      });
     }
     return ops;
   },
   onChange: (body) => {
     const ts = body?.timestamp || new Date().toISOString();
-    const bTwinId = bridgeTwinId('hue-bridge');
-    const ops: AdtOperation[] = [
-      { type: 'PatchTwin', twinId: bTwinId, patch: [{ op: 'add', path: '/lastSeen', value: ts }] }
-    ];
+    const ops: AdtOperation[] = [];
     for (const ch of body?.changes || []) {
       if (ch.type === 'light') {
         const ltId = lightTwinId(String(ch.id));
         if (ch.change === 'added') {
           ops.push({ type: 'UpsertTwin', twinId: ltId, modelId: ModelIds.light, properties: { name: ch.name, stateJson: JSON.stringify(ch.state ?? {}), lastSeen: ts, status: 'active' } });
-          ops.push({ type: 'UpsertRelationship', srcTwinId: bTwinId, relationshipId: containsRelId('light', String(ch.id)), relationshipName: 'contains', targetTwinId: ltId });
         } else if (ch.change === 'updated') {
           ops.push({ type: 'PatchTwin', twinId: ltId, patch: [
             { op: 'add', path: '/lastSeen', value: ts },
@@ -86,7 +60,6 @@ export const HueConnector: Connector = {
         const stId = sensorTwinId(String(ch.id));
         if (ch.change === 'added') {
           ops.push({ type: 'UpsertTwin', twinId: stId, modelId: ModelIds.sensor, properties: { name: ch.name, stateJson: JSON.stringify(ch.state ?? {}), lastSeen: ts, status: 'active' } });
-          ops.push({ type: 'UpsertRelationship', srcTwinId: bTwinId, relationshipId: containsRelId('sensor', String(ch.id)), relationshipName: 'contains', targetTwinId: stId });
         } else if (ch.change === 'updated') {
           ops.push({ type: 'PatchTwin', twinId: stId, patch: [
             { op: 'add', path: '/lastSeen', value: ts },

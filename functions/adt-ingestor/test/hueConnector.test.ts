@@ -4,7 +4,7 @@ import { HueConnector } from '../src/connectors/hue/hueConnector.js';
 const props = { deviceId: 'pi4b', moduleId: 'HueAgent', outputName: 'hueEvents' };
 
 describe('HueConnector snapshot mapping', () => {
-  it('maps snapshot to EnsureModels + bridge/light/sensor upserts', () => {
+  it('maps snapshot to EnsureModels + light/sensor upserts', () => {
     const snapshot = {
       timestamp: '2025-01-01T00:00:00Z',
       lights: [{ id: '1', name: 'Light 1', state: { on: true, bri: 200 } }],
@@ -13,8 +13,8 @@ describe('HueConnector snapshot mapping', () => {
     const ops = HueConnector.onSnapshot(snapshot, props);
     const types = ops.map(o => o.type);
     expect(types[0]).toBe('EnsureModels');
-    expect(types).toContain('UpsertTwin');
-    expect(types).toContain('UpsertRelationship');
+    expect(types.filter(t => t === 'UpsertTwin').length).toBe(2); // 1 light + 1 sensor
+    expect(types).not.toContain('UpsertRelationship');
   });
 });
 
@@ -31,5 +31,6 @@ describe('HueConnector delta mapping', () => {
     const ops = HueConnector.onChange(delta, props);
     expect(ops.find(o => o.type === 'PatchTwin')).toBeTruthy();
     expect(ops.find(o => o.type === 'UpsertTwin')).toBeTruthy();
+    expect(ops.find(o => o.type === 'UpsertRelationship')).toBeFalsy();
   });
 });
