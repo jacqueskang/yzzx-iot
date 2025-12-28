@@ -1,29 +1,18 @@
-// Type guards for Light and Sensor
+import fs from 'fs';
+import path from 'path';
+import { Message, ModuleClient } from 'azure-iot-device';
+import { HueBridge } from './HueBridge';
+import { Light } from './models/Light';
+import { Sensor } from './models/Sensor';
+import { AssetMonitorOptions } from './AssetMonitor.types';
+import { AssetChange } from './models/AssetChange';
+import * as logger from './logger';
+
 function isLight(obj: unknown): obj is Light {
   return typeof obj === 'object' && obj !== null && 'id' in obj && 'name' in obj && 'type' in obj;
 }
 function isSensor(obj: unknown): obj is Sensor {
   return typeof obj === 'object' && obj !== null && 'id' in obj && 'name' in obj && 'type' in obj;
-}
-import fs from 'fs';
-import path from 'path';
-import { Message, ModuleClient } from 'azure-iot-device';
-import { HueBridge, Light, Sensor } from './HueBridge';
-import * as logger from './logger';
-
-export interface AssetMonitorOptions {
-  dataDir?: string;
-  pollIntervalMs?: number;
-  outputName?: string;
-}
-
-export interface AssetChange {
-  type: 'light' | 'sensor';
-  id: string;
-  name: string;
-  change: 'added' | 'updated' | 'removed';
-  state?: Record<string, unknown>;
-  properties?: Array<{ property: string; oldValue: unknown; newValue: unknown }>;
 }
 
 export class AssetMonitor {

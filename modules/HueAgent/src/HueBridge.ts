@@ -1,19 +1,8 @@
+
 import http from 'http';
 import https from 'https';
-
-export interface Light {
-  id: string;
-  name: string;
-  type: string;
-  [key: string]: string | number | boolean | object | undefined;
-}
-
-export interface Sensor {
-  id: string;
-  name: string;
-  type: string;
-  [key: string]: string | number | boolean | object | undefined;
-}
+import { Light } from './models/Light';
+import { Sensor } from './models/Sensor';
 
 export class HueBridge {
   bridgeIp: string;
