@@ -2,25 +2,17 @@ import type { AdtOperation } from '../../core/operations.js';
 import { HueModels, ModelIds, bridgeTwinId, lightTwinId, sensorTwinId, containsRelId } from './hueModels.js';
 import { AssetSnapshotEvent, AssetChangeEvent } from '../../models/AssetEvent.js';
 
-export interface ConnectorContext {
-  deviceId?: string;
-  moduleId?: string;
-  outputName?: string;
-}
-
 export interface Connector {
   key: string;
-  canHandle: (body: any, props: ConnectorContext) => boolean;
-  onSnapshot: (body: AssetSnapshotEvent, props: ConnectorContext) => AdtOperation[];
-  onChange: (body: AssetChangeEvent, props: ConnectorContext) => AdtOperation[];
+  onSnapshot: (body: AssetSnapshotEvent) => AdtOperation[];
+  onChange: (body: AssetChangeEvent) => AdtOperation[];
 }
 
 export const HueConnector: Connector = {
   key: 'hue',
-  canHandle: (_body, props) => props.moduleId === 'HueAgent' && (props.outputName === 'hueEvents' || props.outputName === 'HueEvents' || props.outputName === 'events'),
-  onSnapshot: (body: AssetSnapshotEvent, props: ConnectorContext) => {
+  onSnapshot: (body: AssetSnapshotEvent) => {
     const ts = body?.timestamp || new Date().toISOString();
-    const bTwinId = bridgeTwinId(props.deviceId);
+    const bTwinId = bridgeTwinId('hue-bridge');
     const ops: AdtOperation[] = [];
     // Ensure models exist
     ops.push({ type: 'EnsureModels', models: HueModels });
@@ -29,7 +21,7 @@ export const HueConnector: Connector = {
       type: 'UpsertTwin',
       twinId: bTwinId,
       modelId: ModelIds.bridge,
-      properties: { deviceId: props.deviceId || 'unknown', lastSnapshot: ts, lastSeen: ts }
+      properties: { deviceId: 'hue-bridge', lastSnapshot: ts, lastSeen: ts }
     });
     // Lights
     for (const l of body?.lights || []) {
@@ -67,9 +59,9 @@ export const HueConnector: Connector = {
     }
     return ops;
   },
-  onChange: (body, props) => {
+  onChange: (body) => {
     const ts = body?.timestamp || new Date().toISOString();
-    const bTwinId = bridgeTwinId(props.deviceId);
+    const bTwinId = bridgeTwinId('hue-bridge');
     const ops: AdtOperation[] = [
       { type: 'PatchTwin', twinId: bTwinId, patch: [{ op: 'add', path: '/lastSeen', value: ts }] }
     ];
