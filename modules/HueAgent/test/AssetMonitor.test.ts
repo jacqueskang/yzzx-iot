@@ -87,7 +87,11 @@ describe('AssetMonitor', () => {
       assert.ok(sentMessages[0].message.changes, `Expected sentMessages[0].message to have a 'changes' property, got: ${JSON.stringify(sentMessages[0].message)}`);
       assert.ok(Array.isArray(sentMessages[0].message.changes), `Expected sentMessages[0].message.changes to be an array, got: ${JSON.stringify(sentMessages[0].message.changes)}`);
       assert.ok(sentMessages[0].message.changes.length > 0, `Expected sentMessages[0].message.changes to have at least one change, got: ${JSON.stringify(sentMessages[0].message.changes)}`);
-      assert.strictEqual(sentMessages[0].message.changes[0].change, 'updated', `Expected first change to be 'updated', got: ${JSON.stringify(sentMessages[0].message.changes[0])}`);
+      // Check that the change object has the expected structure (type, id, properties)
+      const change = sentMessages[0].message.changes[0];
+      assert.strictEqual(change.type, 'light', `Expected change.type to be 'light', got: ${change.type}`);
+      assert.strictEqual(change.id, '1', `Expected change.id to be '1', got: ${change.id}`);
+      assert.ok(Array.isArray(change.properties), `Expected change.properties to be an array, got: ${JSON.stringify(change.properties)}`);
     });
   });
 });

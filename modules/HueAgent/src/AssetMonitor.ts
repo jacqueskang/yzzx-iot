@@ -142,21 +142,11 @@ export class AssetMonitor {
     const previousMap = new Map(previousAssets.map(a => [a.id, a]));
     for (const [id, currentAsset] of currentMap) {
       const prevAsset = previousMap.get(id);
-      // Ensure state is Record<string, unknown> | undefined
       const safeState = (currentAsset.state && typeof currentAsset.state === 'object' && !Array.isArray(currentAsset.state)) ? currentAsset.state as Record<string, unknown> : undefined;
-      if (!prevAsset) {
-        changes.push({ type, id, name: currentAsset.name, change: 'added', state: safeState });
-      } else {
-        const prevState = (prevAsset.state && typeof prevAsset.state === 'object' && !Array.isArray(prevAsset.state)) ? prevAsset.state as Record<string, unknown> : undefined;
-        const stateChanges = this.compareStates(prevState, safeState);
-        if (stateChanges.length > 0) {
-          changes.push({ type, id, name: currentAsset.name, change: 'updated', properties: stateChanges });
-        }
-      }
-    }
-    for (const [id, prevAsset] of previousMap) {
-      if (!currentMap.has(id)) {
-        changes.push({ type, id, name: prevAsset.name, change: 'removed' });
+      const prevState = (prevAsset && prevAsset.state && typeof prevAsset.state === 'object' && !Array.isArray(prevAsset.state)) ? prevAsset.state as Record<string, unknown> : undefined;
+      const stateChanges = this.compareStates(prevState, safeState);
+      if (stateChanges.length > 0) {
+        changes.push({ type, id, properties: stateChanges });
       }
     }
     return changes;
