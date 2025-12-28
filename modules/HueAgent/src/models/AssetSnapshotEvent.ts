@@ -1,7 +1,7 @@
 import { Light } from './Light';
 import { Sensor } from './Sensor';
 
-export interface AssetSnapshot {
+export interface AssetSnapshotEvent {
   timestamp: string;
   lights: Light[];
   sensors: Sensor[];
