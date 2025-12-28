@@ -1,18 +1,22 @@
+
+
+
+
+
+
+
+
+
 FROM arm64v8/node:24-slim
-
 WORKDIR /app/
-
 COPY package*.json ./
-
 RUN npm install --omit=dev
-
-COPY *.js ./
-
+COPY tsconfig.json ./
+COPY src ./src
+COPY test ./test
+RUN npx tsc
 # Persist credentials directory
 RUN mkdir -p /app/data && chown node:node /app/data
-
 VOLUME ["/app/data"]
-
 USER node
-
-CMD ["node", "app.js"]
+CMD ["node", "dist/app.js"]

@@ -1,3 +1,4 @@
+// This file has been removed as part of the cleanup process.
 #!/usr/bin/env node
 
 const logger = require('./logger');
