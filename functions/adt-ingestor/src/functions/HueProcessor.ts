@@ -7,10 +7,10 @@ import { executeOps } from '../core/adtService.js';
 
 const settings = loadSettings();
 
-function classify(body: any): 'snapshot' | 'change' | 'unknown' {
-	if (!body || typeof body !== 'object') return 'unknown';
-	if (Array.isArray(body.lights) || Array.isArray(body.sensors)) return 'snapshot';
-	if (Array.isArray(body.changes)) return 'change';
+function classify(event: any): 'snapshot' | 'change' | 'unknown' {
+	if (!event || typeof event !== 'object') return 'unknown';
+	if (Array.isArray(event.lights) || Array.isArray(event.sensors)) return 'snapshot';
+	if (Array.isArray(event.changes)) return 'change';
 	return 'unknown';
 }
 
@@ -28,34 +28,18 @@ app.eventHub('HueProcessor', {
 
 		const client = getAdtClient(adtUrl);
 		try {
-			// Standard: event is an object with a body property
-			if (!event || typeof event !== 'object' || !('body' in event)) {
-				context.warn('Event missing body property, skipping', { event });
-				return;
-			}
-			// No props needed
-			let body = (event as any).body;
-			if (typeof body === 'string') {
-				try {
-					body = JSON.parse(body);
-				} catch (e) {
-					context.error('Failed to parse event.body as JSON', { error: e, body });
-					return;
-				}
-			}
-
-			context.info('Event body', { body });
+			context.info('Event body', JSON.stringify(event));
 			const connector = HueConnector;
-			const kind = classify(body);
+			const kind = classify(event);
 			context.log('Event classified', { kind });
 
 			let ops;
 			if (kind === 'snapshot') {
 				context.log('Invoking onSnapshot', {});
-				ops = connector.onSnapshot(body as AssetSnapshotEvent);
+				ops = connector.onSnapshot(event as AssetSnapshotEvent);
 			} else if (kind === 'change') {
 				context.log('Invoking onChange', {});
-				ops = connector.onChange(body as AssetChangeEvent);
+				ops = connector.onChange(event as AssetChangeEvent);
 			} else {
 				context.warn('Unknown event type, skipping', {});
 				return;
