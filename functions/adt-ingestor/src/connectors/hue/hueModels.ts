@@ -1,3 +1,5 @@
+// DTDL complex object for HueLight state
+
 
 export const DTDL_CONTEXT = "dtmi:dtdl:context;3";
 
@@ -7,10 +9,21 @@ export const HueLightModel = {
   "@context": DTDL_CONTEXT,
   "displayName": "HueLight",
   "contents": [
-    { "@type": "Property", "name": "name", "schema": "string" },
-    { "@type": "Property", "name": "stateJson", "schema": "string" },
-    { "@type": "Property", "name": "lastSeen", "schema": "string" },
-    { "@type": "Property", "name": "status", "schema": "string" }
+    { "@type": "Property", "name": "id", "schema": "string" },
+    { "@type": "Property", "name": "on", "schema": "boolean" },
+    { "@type": "Property", "name": "bri", "schema": "integer" },
+    { "@type": "Property", "name": "ct", "schema": "integer" },
+    { "@type": "Property", "name": "alert", "schema": "string" },
+    { "@type": "Property", "name": "colormode", "schema": "string" },
+    { "@type": "Property", "name": "mode", "schema": "string" },
+    { "@type": "Property", "name": "reachable", "schema": "boolean" },
+    {
+      "@type": "Property", "name": "_metadata", "schema": {
+        "@type": "Map",
+        "mapKey": { "name": "key", "schema": "string" },
+        "mapValue": { "name": "value", "schema": "string" }
+      }
+    }
   ]
 };
 
