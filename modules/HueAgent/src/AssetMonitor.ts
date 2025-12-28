@@ -7,7 +7,7 @@ import { Sensor } from './models/Sensor';
 import { AssetMonitorOptions } from './AssetMonitor.types';
 import { AssetChange } from './models/AssetChange';
 import { AssetChangeEvent } from './models/AssetChangeEvent';
-import { AssetSnapshot } from './models/AssetSnapshot';
+import { AssetSnapshotEvent } from './models/AssetSnapshotEvent';
 import * as logger from './logger';
 
 function isLight(obj: unknown): obj is Light {
@@ -90,7 +90,7 @@ export class AssetMonitor {
     return Promise.resolve();
   }
 
-  async snapshot(): Promise<AssetSnapshot> {
+  async snapshot(): Promise<AssetSnapshotEvent> {
     try {
       await this.bridge.loadAssets();
       return {
