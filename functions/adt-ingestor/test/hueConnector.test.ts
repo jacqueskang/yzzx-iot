@@ -28,7 +28,7 @@ describe('HueConnector delta mapping', () => {
         { type: 'light', id: '2', name: 'Light 2', change: 'removed' }
       ]
     };
-    const ops = HueConnector.onDelta(delta, props);
+    const ops = HueConnector.onChange(delta, props);
     expect(ops.find(o => o.type === 'PatchTwin')).toBeTruthy();
     expect(ops.find(o => o.type === 'UpsertTwin')).toBeTruthy();
   });
