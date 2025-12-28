@@ -6,6 +6,8 @@ import { Light } from './models/Light';
 import { Sensor } from './models/Sensor';
 import { AssetMonitorOptions } from './AssetMonitor.types';
 import { AssetChange } from './models/AssetChange';
+import { AssetChangeEvent } from './models/AssetChangeEvent';
+import { AssetSnapshot } from './models/AssetSnapshot';
 import * as logger from './logger';
 
 function isLight(obj: unknown): obj is Light {
@@ -88,7 +90,7 @@ export class AssetMonitor {
     return Promise.resolve();
   }
 
-  async snapshot(): Promise<{ timestamp: string; lights: Light[]; sensors: Sensor[] }> {
+  async snapshot(): Promise<AssetSnapshot> {
     try {
       await this.bridge.loadAssets();
       return {
@@ -179,7 +181,7 @@ export class AssetMonitor {
   }
 
   private async sendEvent(changes: AssetChange[]): Promise<void> {
-    const eventData = { timestamp: new Date().toISOString(), changes };
+    const eventData: AssetChangeEvent = { timestamp: new Date().toISOString(), changes };
     const message = new Message(JSON.stringify(eventData));
     message.contentType = 'application/json';
     message.contentEncoding = 'utf-8';
@@ -195,21 +197,6 @@ export class AssetMonitor {
     });
   }
 
-  private async sendSnapshot(snapshotData: Record<string, unknown>): Promise<void> {
-    const message = new Message(JSON.stringify(snapshotData));
-    message.contentType = 'application/json';
-    message.contentEncoding = 'utf-8';
-    return new Promise((resolve, reject) => {
-      this.client.sendOutputEvent(this.outputName, message, (err?: Error) => {
-        if (err) {
-          logger.logError(`Failed to send snapshot: ${err instanceof Error ? err.message : String(err)}`);
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
-  }
 
   private async loadState(): Promise<{ lights: Light[]; sensors: Sensor[] } | null> {
     const statePath = path.join(this.dataDir, AssetMonitor.STATE_FILE);
