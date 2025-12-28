@@ -1,11 +1,19 @@
-FROM arm64v8/node:24-slim
-WORKDIR /app/
+# Stage 1: Build
+FROM arm64v8/node:24-slim AS build
+WORKDIR /app
 COPY package*.json ./
-RUN npm install --omit=dev --no-fund --no-audit
+RUN npm ci --no-fund --no-audit
 COPY tsconfig.json ./
 COPY src ./src
 COPY test ./test
 RUN npx tsc
+
+# Stage 2: Production
+FROM arm64v8/node:24-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev --no-fund --no-audit
+COPY --from=build /app/dist ./dist
 # Persist credentials directory
 RUN mkdir -p /app/data && chown node:node /app/data
 VOLUME ["/app/data"]
