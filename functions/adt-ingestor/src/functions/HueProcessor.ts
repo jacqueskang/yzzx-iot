@@ -52,10 +52,10 @@ app.eventHub('HueProcessor', {
 			let ops;
 			if (kind === 'snapshot') {
 				context.log('Invoking onSnapshot', {});
-				ops = connector.onSnapshot(body as AssetSnapshotEvent, {});
+				ops = connector.onSnapshot(body as AssetSnapshotEvent);
 			} else if (kind === 'change') {
 				context.log('Invoking onChange', {});
-				ops = connector.onChange(body as AssetChangeEvent, {});
+				ops = connector.onChange(body as AssetChangeEvent);
 			} else {
 				context.warn('Unknown event type, skipping', {});
 				return;
