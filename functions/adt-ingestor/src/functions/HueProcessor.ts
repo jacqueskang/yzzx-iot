@@ -1,49 +1,37 @@
 import { app, InvocationContext } from '@azure/functions';
+import { AssetChangeEvent, AssetSnapshotEvent } from '../models/AssetEvent.js';
 import { loadSettings } from '../config/settings.js';
-import { pickConnector } from '../core/router.js';
+import { HueConnector } from '../connectors/hue/hueConnector.js';
 import { getAdtClient } from '../core/adtClient.js';
 import { executeOps } from '../core/adtService.js';
 
 const settings = loadSettings();
 
 function extractProps(event: any) {
-	// Try to extract from IoT Hub/Event Hub system properties (classic route)
 	const sys = event?.systemProperties || {};
 	const appProps = event?.properties || event?.applicationProperties || {};
-	let deviceId = sys['iothub-connection-device-id'] || sys['connectionDeviceId'] || event?.connectionDeviceId;
 	let moduleId = sys['iothub-connection-module-id'] || appProps['iothub-connection-module-id'];
 	let outputName = appProps['iothub-outputname'] || appProps['outputName'];
 
-	// Fallback: AssetMonitor format (no systemProperties, no deviceId/moduleId)
-	// If you want to encode deviceId/moduleId in AssetMonitor, add them to the event body or properties
-	if (!deviceId && event?.body?.deviceId) {
-		deviceId = event.body.deviceId;
-	}
 	if (!moduleId && event?.body?.moduleId) {
 		moduleId = event.body.moduleId;
 	}
-	// Optionally, outputName can be set as a property or in the body
 	if (!outputName && event?.body?.outputName) {
 		outputName = event.body.outputName;
 	}
 
-	// For debugging: log if deviceId/moduleId/outputName are missing
-	if (!deviceId || !moduleId || !outputName) {
-		// This log will show up in Azure Functions logs
-		// Remove or comment out in production if too verbose
-		// eslint-disable-next-line no-console
-		console.warn('extractProps: missing deviceId/moduleId/outputName', { deviceId, moduleId, outputName, event });
+	// For debugging: log if moduleId/outputName are missing
+	if (!moduleId || !outputName) {
+		console.warn('extractProps: missing moduleId/outputName', { moduleId, outputName, event });
 	}
-	return { deviceId, moduleId, outputName };
+	return { moduleId, outputName };
 }
 
-function classify(body: any): 'snapshot' | 'delta' | 'unknown' {
+function classify(body: any): 'snapshot' | 'change' | 'unknown' {
 	if (!body || typeof body !== 'object') return 'unknown';
-	if (body.snapshot === true) return 'snapshot';
-	if (body.type === 'snapshot') return 'snapshot';
-	if (body.lights || body.sensors) return 'snapshot';
-	if (body.delta || body.change || body.changes) return 'delta';
-	return 'delta';
+	if (Array.isArray(body.lights) || Array.isArray(body.sensors)) return 'snapshot';
+	if (Array.isArray(body.changes)) return 'change';
+	return 'unknown';
 }
 
 app.eventHub('HueProcessor', {
@@ -63,33 +51,30 @@ app.eventHub('HueProcessor', {
 		for (const [idx, event] of (events as any[]).entries()) {
 			try {
 				const props = extractProps(event);
-				const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+				const rawBody = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
 
-				context.info('Processing event', {
-					index: idx,
-					deviceId: props.deviceId,
-					moduleId: props.moduleId,
-					outputName: props.outputName,
-					bodyType: typeof body,
-					bodyKeys: body && typeof body === 'object' ? Object.keys(body) : undefined
-				});
+				// Log the raw event body before classification (single log, no duplicates)
+				context.info('Event body', { index: idx, body: rawBody });
 
-				const connector = pickConnector(body, props, settings.sourcesEnabled);
-				if (!connector) {
-					context.warn('No connector matched message; skipping', { index: idx, deviceId: props.deviceId });
-					continue;
-				}
+				// Always use HueConnector for event processing
+				const connector = HueConnector;
 
-				const kind = classify(body);
-				context.log('Event classified', { index: idx, kind, deviceId: props.deviceId });
+				const kind = classify(rawBody);
+				context.log('Event classified', { index: idx, kind });
 
+				// Parse body to corresponding model
 				let ops;
 				if (kind === 'snapshot') {
+					const body: AssetSnapshotEvent = rawBody;
 					context.log('Invoking onSnapshot', { index: idx });
 					ops = connector.onSnapshot(body, props);
+				} else if (kind === 'change') {
+					const body: AssetChangeEvent = rawBody;
+					context.log('Invoking onChange', { index: idx });
+					ops = connector.onChange(body, props);
 				} else {
-					context.log('Invoking onDelta', { index: idx });
-					ops = connector.onDelta(body, props);
+					context.warn('Unknown event type, skipping', { index: idx });
+					continue;
 				}
 
 				context.log('Executing operations', { index: idx, opsCount: Array.isArray(ops) ? ops.length : 1 });
@@ -101,7 +86,6 @@ app.eventHub('HueProcessor', {
 				);
 				context.info('Event processed successfully', {
 					index: idx,
-					deviceId: props.deviceId,
 					moduleId: props.moduleId,
 					kind,
 					opsCount: Array.isArray(ops) ? ops.length : 1

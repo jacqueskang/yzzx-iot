@@ -1,5 +1,6 @@
 import type { AdtOperation } from '../../core/operations.js';
 import { HueModels, ModelIds, bridgeTwinId, lightTwinId, sensorTwinId, containsRelId } from './hueModels.js';
+import { AssetSnapshotEvent, AssetChangeEvent } from '../../models/AssetEvent.js';
 
 export interface ConnectorContext {
   deviceId?: string;
@@ -10,14 +11,14 @@ export interface ConnectorContext {
 export interface Connector {
   key: string;
   canHandle: (body: any, props: ConnectorContext) => boolean;
-  onSnapshot: (body: any, props: ConnectorContext) => AdtOperation[];
-  onDelta: (body: any, props: ConnectorContext) => AdtOperation[];
+  onSnapshot: (body: AssetSnapshotEvent, props: ConnectorContext) => AdtOperation[];
+  onChange: (body: AssetChangeEvent, props: ConnectorContext) => AdtOperation[];
 }
 
 export const HueConnector: Connector = {
   key: 'hue',
   canHandle: (_body, props) => props.moduleId === 'HueAgent' && (props.outputName === 'hueEvents' || props.outputName === 'HueEvents' || props.outputName === 'events'),
-  onSnapshot: (body, props) => {
+  onSnapshot: (body: AssetSnapshotEvent, props: ConnectorContext) => {
     const ts = body?.timestamp || new Date().toISOString();
     const bTwinId = bridgeTwinId(props.deviceId);
     const ops: AdtOperation[] = [];
@@ -66,7 +67,7 @@ export const HueConnector: Connector = {
     }
     return ops;
   },
-  onDelta: (body, props) => {
+  onChange: (body, props) => {
     const ts = body?.timestamp || new Date().toISOString();
     const bTwinId = bridgeTwinId(props.deviceId);
     const ops: AdtOperation[] = [
@@ -81,7 +82,7 @@ export const HueConnector: Connector = {
         } else if (ch.change === 'updated') {
           ops.push({ type: 'PatchTwin', twinId: ltId, patch: [
             { op: 'add', path: '/lastSeen', value: ts },
-            { op: 'add', path: '/stateJson', value: JSON.stringify(applyPropsPatch({}, ch.properties)) }
+            { op: 'add', path: '/stateJson', value: JSON.stringify(applyPropsPatch({}, (ch.properties ?? []).map(p => ({ property: p.property, newValue: p.newValue })))) }
           ] });
         } else if (ch.change === 'removed') {
           ops.push({ type: 'PatchTwin', twinId: ltId, patch: [
@@ -97,7 +98,7 @@ export const HueConnector: Connector = {
         } else if (ch.change === 'updated') {
           ops.push({ type: 'PatchTwin', twinId: stId, patch: [
             { op: 'add', path: '/lastSeen', value: ts },
-            { op: 'add', path: '/stateJson', value: JSON.stringify(applyPropsPatch({}, ch.properties)) }
+            { op: 'add', path: '/stateJson', value: JSON.stringify(applyPropsPatch({}, (ch.properties ?? []).map(p => ({ property: p.property, newValue: p.newValue })))) }
           ] });
         } else if (ch.change === 'removed') {
           ops.push({ type: 'PatchTwin', twinId: stId, patch: [
