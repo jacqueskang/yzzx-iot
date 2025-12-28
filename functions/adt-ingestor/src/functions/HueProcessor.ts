@@ -7,11 +7,33 @@ import { executeOps } from '../core/adtService.js';
 const settings = loadSettings();
 
 function extractProps(event: any) {
+	// Try to extract from IoT Hub/Event Hub system properties (classic route)
 	const sys = event?.systemProperties || {};
 	const appProps = event?.properties || event?.applicationProperties || {};
-	const deviceId = sys['iothub-connection-device-id'] || sys['connectionDeviceId'] || event?.connectionDeviceId;
-	const moduleId = sys['iothub-connection-module-id'] || appProps['iothub-connection-module-id'];
-	const outputName = appProps['iothub-outputname'] || appProps['outputName'];
+	let deviceId = sys['iothub-connection-device-id'] || sys['connectionDeviceId'] || event?.connectionDeviceId;
+	let moduleId = sys['iothub-connection-module-id'] || appProps['iothub-connection-module-id'];
+	let outputName = appProps['iothub-outputname'] || appProps['outputName'];
+
+	// Fallback: AssetMonitor format (no systemProperties, no deviceId/moduleId)
+	// If you want to encode deviceId/moduleId in AssetMonitor, add them to the event body or properties
+	if (!deviceId && event?.body?.deviceId) {
+		deviceId = event.body.deviceId;
+	}
+	if (!moduleId && event?.body?.moduleId) {
+		moduleId = event.body.moduleId;
+	}
+	// Optionally, outputName can be set as a property or in the body
+	if (!outputName && event?.body?.outputName) {
+		outputName = event.body.outputName;
+	}
+
+	// For debugging: log if deviceId/moduleId/outputName are missing
+	if (!deviceId || !moduleId || !outputName) {
+		// This log will show up in Azure Functions logs
+		// Remove or comment out in production if too verbose
+		// eslint-disable-next-line no-console
+		console.warn('extractProps: missing deviceId/moduleId/outputName', { deviceId, moduleId, outputName, event });
+	}
 	return { deviceId, moduleId, outputName };
 }
 
