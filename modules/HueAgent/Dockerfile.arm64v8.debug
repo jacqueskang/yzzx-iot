@@ -1,20 +1,24 @@
+
+
+
+
+
+
+
+
+
+
 FROM arm64v8/node:24-slim
-
 WORKDIR /app/
-
 COPY package*.json ./
-
 RUN npm install --omit=dev
-
-COPY *.js ./
-
+COPY tsconfig.json ./
+COPY src ./src
+COPY test ./test
+RUN npx tsc
 EXPOSE 9229
-
 # Persist credentials directory
 RUN mkdir -p /app/data && chown node:node /app/data
-
 VOLUME ["/app/data"]
-
 USER node
-
-CMD ["node", "--inspect=0.0.0.0:9229", "app.js"]
+CMD ["node", "--inspect=0.0.0.0:9229", "dist/app.js"]
