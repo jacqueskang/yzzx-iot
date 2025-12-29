@@ -1,7 +1,13 @@
-// DTDL complex object for HueLight state
-
 
 export const DTDL_CONTEXT = "dtmi:dtdl:context;3";
+
+export const HueLogicalSensorModel = {
+  "@id": "dtmi:com:yzzx:HueLogicalSensor;1",
+  "@type": "Interface",
+  "@context": DTDL_CONTEXT,
+  "displayName": "HueLogicalSensor"
+};
+// DTDL complex object for HueLight state
 
 export const HueLightModel = {
   "@id": "dtmi:com:yzzx:HueLight;1",
@@ -43,11 +49,7 @@ export const HueMotionSensorDeviceModel = {
     {
       "@type": "Relationship",
       "name": "hasSensor",
-      "target": [
-        "dtmi:com:yzzx:HuePresenceSensor;1",
-        "dtmi:com:yzzx:HueLightLevelSensor;1",
-        "dtmi:com:yzzx:HueTemperatureSensor;1"
-      ]
+      "target": "dtmi:com:yzzx:HueLogicalSensor;1"
     }
   ]
 };
@@ -57,6 +59,7 @@ export const HuePresenceSensorModel = {
   "@type": "Interface",
   "@context": DTDL_CONTEXT,
   "displayName": "HuePresenceSensor",
+  "extends": ["dtmi:com:yzzx:HueLogicalSensor;1"],
   "contents": [
     { "@type": "Property", "name": "presence", "schema": "boolean" },
     { "@type": "Property", "name": "lastupdated", "schema": "string" }
@@ -68,6 +71,7 @@ export const HueLightLevelSensorModel = {
   "@type": "Interface",
   "@context": DTDL_CONTEXT,
   "displayName": "HueLightLevelSensor",
+  "extends": ["dtmi:com:yzzx:HueLogicalSensor;1"],
   "contents": [
     { "@type": "Property", "name": "lightlevel", "schema": "integer" },
     { "@type": "Property", "name": "dark", "schema": "boolean" },
@@ -81,6 +85,7 @@ export const HueTemperatureSensorModel = {
   "@type": "Interface",
   "@context": DTDL_CONTEXT,
   "displayName": "HueTemperatureSensor",
+  "extends": ["dtmi:com:yzzx:HueLogicalSensor;1"],
   "contents": [
     { "@type": "Property", "name": "temperature", "schema": "integer" },
     { "@type": "Property", "name": "lastupdated", "schema": "string" }
@@ -90,6 +95,7 @@ export const HueTemperatureSensorModel = {
 export const HueModels = [
   HueLightModel,
   HueMotionSensorDeviceModel,
+  HueLogicalSensorModel,
   HuePresenceSensorModel,
   HueLightLevelSensorModel,
   HueTemperatureSensorModel
@@ -98,6 +104,7 @@ export const HueModels = [
 export const ModelIds = {
   light: HueLightModel["@id"],
   motionSensorDevice: HueMotionSensorDeviceModel["@id"],
+  logicalSensor: HueLogicalSensorModel["@id"],
   presenceSensor: HuePresenceSensorModel["@id"],
   lightLevelSensor: HueLightLevelSensorModel["@id"],
   temperatureSensor: HueTemperatureSensorModel["@id"]
