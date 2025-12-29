@@ -22,30 +22,28 @@ app.eventHub('HueProcessor', {
 	handler: async (event: unknown, context: InvocationContext) => {
 		const adtUrl = settings.adtServiceUrl;
 		if (!adtUrl) {
-			context.log('ADT_SERVICE_URL is not configured; skipping processing.');
+			context.warn('ADT_SERVICE_URL is not configured; skipping processing.');
 			return;
 		}
 
 		const client = getAdtClient(adtUrl);
 		try {
-			context.info('Event body', JSON.stringify(event));
+			context.info('Handing event', event);
 			const connector = HueConnector;
 			const kind = classify(event);
-			context.log('Event classified', { kind });
+			context.debug('Event classified', { kind });
 
 			let ops;
 			if (kind === 'snapshot') {
-				context.log('Invoking onSnapshot', {});
 				ops = connector.onSnapshot(event as AssetSnapshotEvent);
 			} else if (kind === 'change') {
-				context.log('Invoking onChange', {});
 				ops = connector.onChange(event as AssetChangeEvent);
 			} else {
-				context.warn('Unknown event type, skipping', {});
+				context.warn('Unknown event type, skipping...');
 				return;
 			}
 
-			context.log('Executing operations', { opsCount: Array.isArray(ops) ? ops.length : 1 });
+			context.debug('Executing operations...', { opsCount: Array.isArray(ops) ? ops.length : 1 });
 			await executeOps(
 				client,
 				ops,
