@@ -1,74 +1,57 @@
+# Global Context
 
-# GitHub Copilot Instructions
+This repository aims to build an end-to-end IoT solution for "yzzx":
 
-## Repository Structure
+- `modules/` contains IoT Edge modules that run on local IoT Edge devices to collect real-time data from yzzx. Data is sent to Azure IoT Hub.
+- `functions/` contains code for Azure Functions that process incoming data.
+- `functions/adt-ingestor` ingests data into Azure Digital Twins.
+- Cloud infrastructure is deployed via Terraform in `infra/`.
 
-- **infra/**: Terraform IaC for Azure (Function App, IoT Hub, Digital Twins, etc.)
-- **functions/adt-ingestor/**: TypeScript Azure Function (src, test, config, connectors, core, telemetry)
-- **modules/HueAgent/**: Node.js IoT Edge module (source, tests, Dockerfiles)
-- **iotedge-layers/**: IoT Edge deployment manifests
-- **scripts/**: Bash scripts for deployment and automation
-- **deploy.sh**: Top-level deployment script
+# Copilot Instructions
 
-## Commit Message Format
+## Workflow
 
-Always use semantic commit format (Conventional Commits):
+**For every AI-completed task:**
+1. Apply Test-Driven Development (TDD):
+  - Add a failing test first describing the expected behavior.
+  - Implement the feature or fix so the test passes.
+  - Ensure the test passes after implementation.
+2. Before finishing:
+  - Run build, lint, and test commands.
+  - Fix any build, lint, or test issues until all pass successfully.
 
-```
+## Project Structure
+
+- `infra/` — Terraform for Azure resources (Function App, IoT Hub, Digital Twins)
+- `functions/adt-ingestor/` — TypeScript Azure Function (src, test, config, connectors, core, telemetry)
+- `modules/HueAgent/` — Node.js IoT Edge module (source, tests, Dockerfiles)
+- `iotedge-layers/` — IoT Edge deployment manifests
+- `scripts/` — Bash scripts for deployment and automation
+- `deploy.sh` — Top-level deployment script
+
+
+## Commit Messages
+
+Use Conventional Commits:
 <type>(<scope>): <subject>
 
-<body>
+Types: feat, fix, docs, style, refactor, test, chore, ci, perf, build
+- Keep subject ≤ 50 chars, imperative mood
+- Use scope for module/component
+- Add body/context if needed
 
-<footer>
-```
-
-### Types
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, no logic change)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
-- `ci`: CI/CD pipeline changes
-- `perf`: Performance improvements
-- `build`: Build system changes
-
-### Examples
-```
-feat(hueagent): add arm64 support with Node.js 24
-
-- Create Dockerfile.arm64v8 for Raspberry Pi
-- Update pipeline to build for arm64
-- Add basic test file
-```
-
-```
-fix(pipeline): specify Dockerfile.arm64v8 in build steps
-```
-
-```
-ci(workflow): update Node.js version to 24
-```
-
-
-## Guidelines
-- Keep subject line under 50 characters
-- Use imperative mood ("add" not "added")
-- Include scope when relevant (module/component name)
-- Add body for context when needed
-- Reference the correct folder/component in the scope (e.g., `infra`, `adt-ingestor`, `HueAgent`, `scripts`)
+Examples:
+feat(hueagent): add arm64 support
+fix(pipeline): use Dockerfile.arm64v8
+ci(workflow): update Node.js version
 
 ## Versioning
 
-This project uses **semantic-release** for automated version management. Versions are automatically determined based on commit messages:
-
-- **DO NOT** manually update `package.json` version
-- Versions are auto-bumped when PRs merge to main
-- semantic-release analyzes commit types to determine version bump:
-  - `feat:` → minor version bump (0.1.0 → 0.2.0)
-  - `fix:` → patch version bump (0.1.0 → 0.1.1)
-  - `BREAKING CHANGE:` or `!` suffix → major version bump (0.1.0 → 1.0.0)
-  - `perf:`, `refactor:` → patch version bump
-- CHANGELOG.md is automatically generated
-- Git tags and GitHub releases are created automatically
+Semantic-release versioning is only used for `modules/HueAgent`:
+- Do not manually update `modules/HueAgent/package.json` version
+- Version bumps based on commit type:
+  - feat: minor
+  - fix: patch
+  - BREAKING CHANGE/! : major
+  - perf/refactor: patch
+- CHANGELOG.md, tags, and releases are auto-generated for `modules/HueAgent`
