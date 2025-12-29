@@ -1,5 +1,5 @@
 import type { AdtOperation } from '../../core/operations.js';
-import { HueModels, ModelIds, lightTwinId, sensorTwinId } from './hueModels.js';
+import { HueModels, ModelIds, lightTwinId } from './hueModels.js';
 import { AssetSnapshotEvent, AssetChangeEvent } from '../../models/AssetEvent.js';
 
 export interface Connector {
@@ -23,7 +23,31 @@ export const HueConnector: Connector = {
 
     // Collect current snapshot twin IDs
     const snapshotLightTwinIds = new Set((event?.lights || []).map(l => lightTwinId(String(l.id))));
-    const snapshotSensorTwinIds = new Set((event?.sensors || []).map(s => sensorTwinId(String(s.id))));
+    // Group sensors by uniqueid prefix (physical device)
+    const sensors = (event?.sensors || []).filter(s => s.type !== 'Daylight' && s.type !== 'ZLLSwitch');
+    const skippedSensors = (event?.sensors || []).filter(s => s.type === 'Daylight' || s.type === 'ZLLSwitch');
+    for (const s of skippedSensors) {
+      // eslint-disable-next-line no-console
+      console.debug(`[HueConnector] Skipping sensor type: ${s.type}, id: ${s.id}, name: ${s.name}`);
+    }
+    // Map: uniqueidPrefix -> { device, presence, lightlevel, temperature }
+    const sensorGroups: Record<string, any> = {};
+    for (const s of sensors) {
+      const match = s.uniqueid?.match(/^(.*)-02-(0406|0400|0402)$/);
+      if (!match) continue;
+      const prefix = match[1];
+      if (!sensorGroups[prefix]) sensorGroups[prefix] = {};
+      if (s.type === 'ZLLPresence') sensorGroups[prefix].presence = s;
+      if (s.type === 'ZLLLightLevel') sensorGroups[prefix].lightlevel = s;
+      if (s.type === 'ZLLTemperature') sensorGroups[prefix].temperature = s;
+      // Use the first sensor as the device base
+      if (!sensorGroups[prefix].device) sensorGroups[prefix].device = s;
+    }
+    // For twin removal
+    const snapshotDeviceTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-motion-device-${prefix}`));
+    const snapshotPresenceTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-presence-sensor-${prefix}`));
+    const snapshotLightLevelTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-lightlevel-sensor-${prefix}`));
+    const snapshotTemperatureTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-temperature-sensor-${prefix}`));
     // Upsert lights
     for (const l of event?.lights || []) {
       const ltId = lightTwinId(String(l.id));
@@ -51,22 +75,96 @@ export const HueConnector: Connector = {
         }
       });
     }
-    // Upsert sensors
-    for (const s of event?.sensors || []) {
-      const stId = sensorTwinId(String(s.id));
+    // Upsert motion sensor device and logical sensors
+    for (const [prefix, group] of Object.entries(sensorGroups)) {
+      const device = group.device;
+      const deviceTwinId = `hue-motion-device-${prefix}`;
       ops.push({
         type: 'UpsertTwin',
-        twinId: stId,
-        modelId: ModelIds.sensor,
-        properties: { name: s.name, stateJson: JSON.stringify(s.state ?? {}), lastSeen: ts }
+        twinId: deviceTwinId,
+        modelId: ModelIds.motionSensorDevice,
+        properties: {
+          name: device.name,
+          uniqueid: prefix,
+          modelid: device.modelid,
+          manufacturername: device.manufacturername,
+          productname: device.productname,
+          swversion: device.swversion,
+          battery: device.config?.battery
+        }
       });
+      // Presence
+      if (group.presence) {
+        const tId = `hue-presence-sensor-${prefix}`;
+        ops.push({
+          type: 'UpsertTwin',
+          twinId: tId,
+          modelId: ModelIds.presenceSensor,
+          properties: {
+            presence: group.presence.state?.presence ?? false,
+            lastupdated: group.presence.state?.lastupdated || ''
+          }
+        });
+        ops.push({
+          type: 'UpsertRelationship',
+          srcTwinId: deviceTwinId,
+          relationshipId: `${deviceTwinId}-hasSensor-${tId}`,
+          relationshipName: 'hasSensor',
+          targetTwinId: tId
+        });
+      }
+      // LightLevel
+      if (group.lightlevel) {
+        const tId = `hue-lightlevel-sensor-${prefix}`;
+        ops.push({
+          type: 'UpsertTwin',
+          twinId: tId,
+          modelId: ModelIds.lightLevelSensor,
+          properties: {
+            lightlevel: group.lightlevel.state?.lightlevel ?? 0,
+            dark: group.lightlevel.state?.dark ?? false,
+            daylight: group.lightlevel.state?.daylight ?? false,
+            lastupdated: group.lightlevel.state?.lastupdated || ''
+          }
+        });
+        ops.push({
+          type: 'UpsertRelationship',
+          srcTwinId: deviceTwinId,
+          relationshipId: `${deviceTwinId}-hasSensor-${tId}`,
+          relationshipName: 'hasSensor',
+          targetTwinId: tId
+        });
+      }
+      // Temperature
+      if (group.temperature) {
+        const tId = `hue-temperature-sensor-${prefix}`;
+        ops.push({
+          type: 'UpsertTwin',
+          twinId: tId,
+          modelId: ModelIds.temperatureSensor,
+          properties: {
+            temperature: group.temperature.state?.temperature ?? 0,
+            lastupdated: group.temperature.state?.lastupdated || ''
+          }
+        });
+        ops.push({
+          type: 'UpsertRelationship',
+          srcTwinId: deviceTwinId,
+          relationshipId: `${deviceTwinId}-hasSensor-${tId}`,
+          relationshipName: 'hasSensor',
+          targetTwinId: tId
+        });
+      }
     }
 
     // Remove old twins (lights/sensors) not in snapshot
     if (existingTwinIds) {
       for (const twinId of existingTwinIds) {
         if ((twinId.startsWith('hue-light-') && !snapshotLightTwinIds.has(twinId)) ||
-            (twinId.startsWith('hue-sensor-') && !snapshotSensorTwinIds.has(twinId))) {
+            (twinId.startsWith('hue-motion-device-') && !snapshotDeviceTwinIds.has(twinId)) ||
+            (twinId.startsWith('hue-presence-sensor-') && !snapshotPresenceTwinIds.has(twinId)) ||
+            (twinId.startsWith('hue-lightlevel-sensor-') && !snapshotLightLevelTwinIds.has(twinId)) ||
+            (twinId.startsWith('hue-temperature-sensor-') && !snapshotTemperatureTwinIds.has(twinId))) {
           ops.push({ type: 'DeleteTwin', twinId });
         }
       }
@@ -77,9 +175,13 @@ export const HueConnector: Connector = {
       const hueModelIds = new Set(HueModels.map(m => m["@id"]));
       for (const modelId of existingModelIds) {
         if (hueModelIds.has(modelId)) continue; // keep current models
-        // Only delete models that look like HueLight or HueSensor for yzzx namespace
+        // Only delete models that look like HueLight, HueMotionSensorDevice, or new sensor models for yzzx namespace
         if (typeof modelId === 'string' &&
-            (modelId.includes('dtmi:com:yzzx:HueLight') || modelId.includes('dtmi:com:yzzx:HueSensor'))) {
+            (modelId.includes('dtmi:com:yzzx:HueLight') ||
+             modelId.includes('dtmi:com:yzzx:HueMotionSensorDevice') ||
+             modelId.includes('dtmi:com:yzzx:HuePresenceSensor') ||
+             modelId.includes('dtmi:com:yzzx:HueLightLevelSensor') ||
+             modelId.includes('dtmi:com:yzzx:HueTemperatureSensor'))) {
           ops.push({ type: 'DeleteModel', modelId });
         }
       }
@@ -98,11 +200,37 @@ export const HueConnector: Connector = {
         }
         ops.push({ type: 'PatchTwin', twinId: ltId, patch });
       } else if (ch.type === 'sensor') {
-        const stId = sensorTwinId(String(ch.id));
-        ops.push({ type: 'PatchTwin', twinId: stId, patch: [
-          { op: 'add', path: '/lastSeen', value: ts },
-          { op: 'add', path: '/stateJson', value: JSON.stringify(applyPropsPatch({}, (ch.properties ?? []).map(p => ({ property: p.property, newValue: p.newValue })))) }
-        ] });
+        // Try to extract sensorType and uniqueid from properties array
+        let sensorType = '', uniqueid = '';
+        if (Array.isArray(ch.properties)) {
+          for (const p of ch.properties) {
+            if (p.property === 'type') sensorType = String(p.newValue);
+            if (p.property === 'uniqueid') uniqueid = String(p.newValue);
+          }
+        }
+        if (!sensorType || !uniqueid) {
+          // eslint-disable-next-line no-console
+          console.debug(`[HueConnector] Skipping change for missing sensorType/uniqueid, id: ${ch.id}`);
+          continue;
+        }
+        if (sensorType === 'Daylight' || sensorType === 'ZLLSwitch') {
+          // eslint-disable-next-line no-console
+          console.debug(`[HueConnector] Skipping change for sensor type: ${sensorType}, id: ${ch.id}`);
+          continue;
+        }
+        const match = uniqueid.match(/^(.*)-02-(0406|0400|0402)$/);
+        if (!match) continue;
+        const prefix = match[1];
+        let twinId = '';
+        if (sensorType === 'ZLLPresence') twinId = `hue-presence-sensor-${prefix}`;
+        if (sensorType === 'ZLLLightLevel') twinId = `hue-lightlevel-sensor-${prefix}`;
+        if (sensorType === 'ZLLTemperature') twinId = `hue-temperature-sensor-${prefix}`;
+        if (!twinId) continue;
+        const patch: { op: 'add'; path: string; value: unknown }[] = [];
+        for (const p of ch.properties || []) {
+          patch.push({ op: 'add', path: `/${p.property}`, value: p.newValue });
+        }
+        ops.push({ type: 'PatchTwin', twinId, patch });
       }
     }
     return ops;

@@ -27,25 +27,80 @@ export const HueLightModel = {
   ]
 };
 
-export const HueSensorModel = {
-  "@id": "dtmi:com:yzzx:HueSensor;1",
+export const HueMotionSensorDeviceModel = {
+  "@id": "dtmi:com:yzzx:HueMotionSensorDevice;1",
   "@type": "Interface",
   "@context": DTDL_CONTEXT,
-  "displayName": "HueSensor",
+  "displayName": "HueMotionSensorDevice",
   "contents": [
     { "@type": "Property", "name": "name", "schema": "string" },
-    { "@type": "Property", "name": "stateJson", "schema": "string" },
-    { "@type": "Property", "name": "lastSeen", "schema": "string" },
-    { "@type": "Property", "name": "status", "schema": "string" }
+    { "@type": "Property", "name": "uniqueid", "schema": "string" },
+    { "@type": "Property", "name": "modelid", "schema": "string" },
+    { "@type": "Property", "name": "manufacturername", "schema": "string" },
+    { "@type": "Property", "name": "productname", "schema": "string" },
+    { "@type": "Property", "name": "swversion", "schema": "string" },
+    { "@type": "Property", "name": "battery", "schema": "integer" },
+    {
+      "@type": "Relationship",
+      "name": "hasSensor",
+      "target": [
+        "dtmi:com:yzzx:HuePresenceSensor;1",
+        "dtmi:com:yzzx:HueLightLevelSensor;1",
+        "dtmi:com:yzzx:HueTemperatureSensor;1"
+      ]
+    }
   ]
 };
 
+export const HuePresenceSensorModel = {
+  "@id": "dtmi:com:yzzx:HuePresenceSensor;1",
+  "@type": "Interface",
+  "@context": DTDL_CONTEXT,
+  "displayName": "HuePresenceSensor",
+  "contents": [
+    { "@type": "Property", "name": "presence", "schema": "boolean" },
+    { "@type": "Property", "name": "lastupdated", "schema": "string" }
+  ]
+};
 
-export const HueModels = [HueLightModel, HueSensorModel];
+export const HueLightLevelSensorModel = {
+  "@id": "dtmi:com:yzzx:HueLightLevelSensor;1",
+  "@type": "Interface",
+  "@context": DTDL_CONTEXT,
+  "displayName": "HueLightLevelSensor",
+  "contents": [
+    { "@type": "Property", "name": "lightlevel", "schema": "integer" },
+    { "@type": "Property", "name": "dark", "schema": "boolean" },
+    { "@type": "Property", "name": "daylight", "schema": "boolean" },
+    { "@type": "Property", "name": "lastupdated", "schema": "string" }
+  ]
+};
+
+export const HueTemperatureSensorModel = {
+  "@id": "dtmi:com:yzzx:HueTemperatureSensor;1",
+  "@type": "Interface",
+  "@context": DTDL_CONTEXT,
+  "displayName": "HueTemperatureSensor",
+  "contents": [
+    { "@type": "Property", "name": "temperature", "schema": "integer" },
+    { "@type": "Property", "name": "lastupdated", "schema": "string" }
+  ]
+};
+
+export const HueModels = [
+  HueLightModel,
+  HueMotionSensorDeviceModel,
+  HuePresenceSensorModel,
+  HueLightLevelSensorModel,
+  HueTemperatureSensorModel
+];
 
 export const ModelIds = {
   light: HueLightModel["@id"],
-  sensor: HueSensorModel["@id"]
+  motionSensorDevice: HueMotionSensorDeviceModel["@id"],
+  presenceSensor: HuePresenceSensorModel["@id"],
+  lightLevelSensor: HueLightLevelSensorModel["@id"],
+  temperatureSensor: HueTemperatureSensorModel["@id"]
 };
 
 
