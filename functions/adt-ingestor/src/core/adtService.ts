@@ -49,6 +49,18 @@ export async function executeOps(
             await client.updateDigitalTwin(op.twinId, op.patch as any);
             break;
           }
+          case 'DeleteTwin': {
+            await client.deleteDigitalTwin(op.twinId);
+            break;
+          }
+          case 'DeleteModel': {
+            await client.deleteModel(op.modelId);
+            break;
+          }
+          default: {
+            context.warn(`ADT op type skipped: ${(op as any).type}`, { op });
+            break;
+          }
         }
         break; // op succeeded
       } catch (err: any) {
