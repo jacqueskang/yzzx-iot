@@ -171,19 +171,7 @@ export const HueConnector: Connector = {
       }
     }
 
-    // Remove old twins (lights/sensors) not in snapshot
-    if (existingTwinIds) {
-      for (const twinId of existingTwinIds) {
-        if ((twinId.startsWith('hue-light-') && !snapshotLightTwinIds.has(twinId)) ||
-          (twinId.startsWith('hue-motion-device-') && !snapshotDeviceTwinIds.has(twinId)) ||
-          (twinId.startsWith('hue-sensor-') &&
-            !snapshotPresenceTwinIds.has(twinId) &&
-            !snapshotLightLevelTwinIds.has(twinId) &&
-            !snapshotTemperatureTwinIds.has(twinId))) {
-          ops.push({ type: 'DeleteTwin', twinId });
-        }
-      }
-    }
+    // ...existing code...
 
     // Remove old models not in HueModels
     if (existingModelIds) {

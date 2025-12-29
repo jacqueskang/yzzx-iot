@@ -4,7 +4,20 @@ import { HueConnector } from '../src/connectors/hue/hueConnector.js';
 const props = { deviceId: 'pi4b', moduleId: 'HueAgent', outputName: 'hueEvents' };
 
 
-const mockContext = { warn: () => {}, log: () => {} };
+const mockContext = {
+  invocationId: 'test',
+  functionName: 'testFunc',
+  extraInputs: {},
+  extraOutputs: {},
+  warn: () => {},
+  log: () => {},
+  error: () => {},
+  trace: () => {},
+  info: () => {},
+  bindingData: {},
+  bindings: {},
+  done: () => {},
+};
 
 describe('HueConnector snapshot mapping', () => {
   it('maps snapshot to EnsureModels + light/motion sensor device and logical sensor upserts', () => {
