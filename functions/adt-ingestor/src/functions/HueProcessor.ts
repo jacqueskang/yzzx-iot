@@ -28,7 +28,7 @@ app.eventHub('HueProcessor', {
 
 		const client = getAdtClient(adtUrl);
 		try {
-			context.info('Handing event', event);
+			context.info('Handing event', JSON.stringify(event));
 			const connector = HueConnector;
 			const kind = classify(event);
 			context.debug('Event classified', { kind });
