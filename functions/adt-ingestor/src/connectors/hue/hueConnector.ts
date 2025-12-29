@@ -4,27 +4,34 @@ import { AssetSnapshotEvent, AssetChangeEvent } from '../../models/AssetEvent.js
 
 export interface Connector {
   key: string;
-  onSnapshot: (event: AssetSnapshotEvent) => AdtOperation[];
+  /**
+   * @param event AssetSnapshotEvent
+   * @param existingTwinIds (optional) array of all current twin IDs in ADT
+   * @param existingModelIds (optional) array of all current model IDs in ADT
+   */
+  onSnapshot: (event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) => AdtOperation[];
   onChange: (event: AssetChangeEvent) => AdtOperation[];
 }
 
 export const HueConnector: Connector = {
   key: 'hue',
-  onSnapshot: (event: AssetSnapshotEvent) => {
+  onSnapshot: (event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) => {
     const ts = event?.timestamp || new Date().toISOString();
     const ops: AdtOperation[] = [];
     // Ensure models exist
     ops.push({ type: 'EnsureModels', models: HueModels });
-    // No bridge twin logic
-    // Lights
+
+    // Collect current snapshot twin IDs
+    const snapshotLightTwinIds = new Set((event?.lights || []).map(l => lightTwinId(String(l.id))));
+    const snapshotSensorTwinIds = new Set((event?.sensors || []).map(s => sensorTwinId(String(s.id))));
+    // Upsert lights
     for (const l of event?.lights || []) {
       const ltId = lightTwinId(String(l.id));
       const state = l.state || {};
-      // Collect all non-state properties into metadata
       const metadata: Record<string, string> = {};
       for (const key of [
         'name', 'type', 'modelid', 'manufacturername', 'productname', 'uniqueid',
-        'swversion', 'swconfigid', 'productid', 'status']) { // removed 'lastSeen'
+        'swversion', 'swconfigid', 'productid', 'status']) {
         if (l[key] != null) metadata[key] = String(l[key]);
       }
       ops.push({
@@ -44,7 +51,7 @@ export const HueConnector: Connector = {
         }
       });
     }
-    // Sensors
+    // Upsert sensors
     for (const s of event?.sensors || []) {
       const stId = sensorTwinId(String(s.id));
       ops.push({
@@ -53,6 +60,29 @@ export const HueConnector: Connector = {
         modelId: ModelIds.sensor,
         properties: { name: s.name, stateJson: JSON.stringify(s.state ?? {}), lastSeen: ts }
       });
+    }
+
+    // Remove old twins (lights/sensors) not in snapshot
+    if (existingTwinIds) {
+      for (const twinId of existingTwinIds) {
+        if ((twinId.startsWith('hue-light-') && !snapshotLightTwinIds.has(twinId)) ||
+            (twinId.startsWith('hue-sensor-') && !snapshotSensorTwinIds.has(twinId))) {
+          ops.push({ type: 'DeleteTwin', twinId });
+        }
+      }
+    }
+
+    // Remove old models not in HueModels
+    if (existingModelIds) {
+      const hueModelIds = new Set(HueModels.map(m => m["@id"]));
+      for (const modelId of existingModelIds) {
+        if (hueModelIds.has(modelId)) continue; // keep current models
+        // Only delete models that look like HueLight or HueSensor for yzzx namespace
+        if (typeof modelId === 'string' &&
+            (modelId.includes('dtmi:com:yzzx:HueLight') || modelId.includes('dtmi:com:yzzx:HueSensor'))) {
+          ops.push({ type: 'DeleteModel', modelId });
+        }
+      }
     }
     return ops;
   },
@@ -64,7 +94,6 @@ export const HueConnector: Connector = {
         const ltId = lightTwinId(String(ch.id));
         const patch: { op: 'add'; path: string; value: unknown }[] = [];
         for (const p of ch.properties || []) {
-          // Use property name directly as patch path
           patch.push({ op: 'add', path: `/${p.property}`, value: p.newValue });
         }
         ops.push({ type: 'PatchTwin', twinId: ltId, patch });

@@ -4,7 +4,7 @@
 export const DTDL_CONTEXT = "dtmi:dtdl:context;3";
 
 export const HueLightModel = {
-  "@id": "dtmi:com:example:HueLight;1",
+  "@id": "dtmi:com:yzzx:HueLight;1",
   "@type": "Interface",
   "@context": DTDL_CONTEXT,
   "displayName": "HueLight",
@@ -28,7 +28,7 @@ export const HueLightModel = {
 };
 
 export const HueSensorModel = {
-  "@id": "dtmi:com:example:HueSensor;1",
+  "@id": "dtmi:com:yzzx:HueSensor;1",
   "@type": "Interface",
   "@context": DTDL_CONTEXT,
   "displayName": "HueSensor",
