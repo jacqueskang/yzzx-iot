@@ -35,7 +35,9 @@ export const HueConnector: Connector = {
     for (const s of sensors) {
       const match = s.uniqueid?.match(/^(.*)-02-(0406|0400|0402)$/);
       if (!match) continue;
-      const prefix = match[1];
+      // Sanitize prefix for valid twin ID (replace invalid chars with '-')
+      const rawPrefix = match[1];
+      const prefix = rawPrefix.replace(/[^A-Za-z0-9\-\.\+%_#*?!(),=@$']/g, '-');
       if (!sensorGroups[prefix]) sensorGroups[prefix] = {};
       if (s.type === 'ZLLPresence') sensorGroups[prefix].presence = s;
       if (s.type === 'ZLLLightLevel') sensorGroups[prefix].lightlevel = s;
@@ -220,7 +222,8 @@ export const HueConnector: Connector = {
         }
         const match = uniqueid.match(/^(.*)-02-(0406|0400|0402)$/);
         if (!match) continue;
-        const prefix = match[1];
+        const rawPrefix = match[1];
+        const prefix = rawPrefix.replace(/[^A-Za-z0-9\-\.\+%_#*?!(),=@$']/g, '-');
         let twinId = '';
         if (sensorType === 'ZLLPresence') twinId = `hue-presence-sensor-${prefix}`;
         if (sensorType === 'ZLLLightLevel') twinId = `hue-lightlevel-sensor-${prefix}`;

@@ -37,27 +37,27 @@ describe('HueConnector snapshot mapping', () => {
     const existingTwinIds = [
       'hue-light-1',
       'hue-light-2',
-      'hue-motion-device-00:17:88:01:03:29:b5:a3',
-      'hue-motion-device-00:17:88:01:03:29:ff:ff',
-      'hue-presence-sensor-00:17:88:01:03:29:b5:a3',
-      'hue-presence-sensor-00:17:88:01:03:29:ff:ff',
-      'hue-lightlevel-sensor-00:17:88:01:03:29:b5:a3',
-      'hue-lightlevel-sensor-00:17:88:01:03:29:ff:ff',
-      'hue-temperature-sensor-00:17:88:01:03:29:b5:a3',
-      'hue-temperature-sensor-00:17:88:01:03:29:ff:ff'
+      'hue-motion-device-00-17-88-01-03-29-b5-a3',
+      'hue-motion-device-00-17-88-01-03-29-ff-ff',
+      'hue-presence-sensor-00-17-88-01-03-29-b5-a3',
+      'hue-presence-sensor-00-17-88-01-03-29-ff-ff',
+      'hue-lightlevel-sensor-00-17-88-01-03-29-b5-a3',
+      'hue-lightlevel-sensor-00-17-88-01-03-29-ff-ff',
+      'hue-temperature-sensor-00-17-88-01-03-29-b5-a3',
+      'hue-temperature-sensor-00-17-88-01-03-29-ff-ff'
     ];
     const ops = HueConnector.onSnapshot(snapshot, existingTwinIds);
     const deleted = ops.filter(o => o.type === 'DeleteTwin').map(o => o.twinId);
     expect(deleted).toContain('hue-light-2');
-    expect(deleted).toContain('hue-motion-device-00:17:88:01:03:29:ff:ff');
-    expect(deleted).toContain('hue-presence-sensor-00:17:88:01:03:29:ff:ff');
-    expect(deleted).toContain('hue-lightlevel-sensor-00:17:88:01:03:29:ff:ff');
-    expect(deleted).toContain('hue-temperature-sensor-00:17:88:01:03:29:ff:ff');
+    expect(deleted).toContain('hue-motion-device-00-17-88-01-03-29-ff-ff');
+    expect(deleted).toContain('hue-presence-sensor-00-17-88-01-03-29-ff-ff');
+    expect(deleted).toContain('hue-lightlevel-sensor-00-17-88-01-03-29-ff-ff');
+    expect(deleted).toContain('hue-temperature-sensor-00-17-88-01-03-29-ff-ff');
     expect(deleted).not.toContain('hue-light-1');
-    expect(deleted).not.toContain('hue-motion-device-00:17:88:01:03:29:b5:a3');
-    expect(deleted).not.toContain('hue-presence-sensor-00:17:88:01:03:29:b5:a3');
-    expect(deleted).not.toContain('hue-lightlevel-sensor-00:17:88:01:03:29:b5:a3');
-    expect(deleted).not.toContain('hue-temperature-sensor-00:17:88:01:03:29:b5:a3');
+    expect(deleted).not.toContain('hue-motion-device-00-17-88-01-03-29-b5-a3');
+    expect(deleted).not.toContain('hue-presence-sensor-00-17-88-01-03-29-b5-a3');
+    expect(deleted).not.toContain('hue-lightlevel-sensor-00-17-88-01-03-29-b5-a3');
+    expect(deleted).not.toContain('hue-temperature-sensor-00-17-88-01-03-29-b5-a3');
   });
   
   it('removes old HueLight/HueMotionSensorDevice and logical sensor models not in snapshot', () => {
