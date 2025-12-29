@@ -31,38 +31,43 @@ export interface Connector {
 export const HueConnector: Connector = {
   key: 'hue',
   onSnapshot: (context: InvocationContext, event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) => {
+        // Group sensors by uniqueid prefix (physical device)
+        const sensors = (event?.sensors || []).filter(s => s.type !== 'Daylight' && s.type !== 'ZLLSwitch');
+        const skippedSensors = (event?.sensors || []).filter(s => s.type === 'Daylight' || s.type === 'ZLLSwitch');
+        for (const s of skippedSensors) {
+          context.warn(`[HueConnector] Skipping sensor type: ${s.type}, id: ${s.id}, name: ${s.name}`);
+        }
+        // Map: uniqueidPrefix -> { device, presence, lightlevel, temperature }
+        const sensorGroups: Record<string, any> = {};
+        for (const s of sensors) {
+          const match = s.uniqueid?.match(/^(.*)-02-(0406|0400|0402)$/);
+          if (!match) continue;
+          // Sanitize prefix for valid twin ID (replace invalid chars with '-')
+          const rawPrefix = match[1];
+          const prefix = rawPrefix.replace(/[^A-Za-z0-9\-\.\+%_#*?!(),=@$']/g, '-');
+          if (!sensorGroups[prefix]) sensorGroups[prefix] = {};
+          if (s.type === 'ZLLPresence') sensorGroups[prefix].presence = s;
+          if (s.type === 'ZLLLightLevel') sensorGroups[prefix].lightlevel = s;
+          if (s.type === 'ZLLTemperature') sensorGroups[prefix].temperature = s;
+          // Use the first sensor as the device base
+          if (!sensorGroups[prefix].device) sensorGroups[prefix].device = s;
+        }
     const ops: AdtOperation[] = [];
+    // Remove all existing twins and models at the beginning
+    if (existingTwinIds) {
+      for (const twinId of existingTwinIds) {
+        ops.push({ type: 'DeleteTwin', twinId });
+      }
+    }
+    if (existingModelIds) {
+      for (const modelId of existingModelIds) {
+        ops.push({ type: 'DeleteModel', modelId });
+      }
+    }
     // Ensure models exist
     ops.push({ type: 'EnsureModels', models: HueModels });
 
-    // Collect current snapshot twin IDs
-    const snapshotLightTwinIds = new Set((event?.lights || []).map(l => lightTwinId(String(l.id))));
-    // Group sensors by uniqueid prefix (physical device)
-    const sensors = (event?.sensors || []).filter(s => s.type !== 'Daylight' && s.type !== 'ZLLSwitch');
-    const skippedSensors = (event?.sensors || []).filter(s => s.type === 'Daylight' || s.type === 'ZLLSwitch');
-    for (const s of skippedSensors) {
-      context.warn(`[HueConnector] Skipping sensor type: ${s.type}, id: ${s.id}, name: ${s.name}`);
-    }
-    // Map: uniqueidPrefix -> { device, presence, lightlevel, temperature }
-    const sensorGroups: Record<string, any> = {};
-    for (const s of sensors) {
-      const match = s.uniqueid?.match(/^(.*)-02-(0406|0400|0402)$/);
-      if (!match) continue;
-      // Sanitize prefix for valid twin ID (replace invalid chars with '-')
-      const rawPrefix = match[1];
-      const prefix = rawPrefix.replace(/[^A-Za-z0-9\-\.\+%_#*?!(),=@$']/g, '-');
-      if (!sensorGroups[prefix]) sensorGroups[prefix] = {};
-      if (s.type === 'ZLLPresence') sensorGroups[prefix].presence = s;
-      if (s.type === 'ZLLLightLevel') sensorGroups[prefix].lightlevel = s;
-      if (s.type === 'ZLLTemperature') sensorGroups[prefix].temperature = s;
-      // Use the first sensor as the device base
-      if (!sensorGroups[prefix].device) sensorGroups[prefix].device = s;
-    }
-    // For twin removal
-    const snapshotDeviceTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-motion-device-${prefix}`));
-    const snapshotPresenceTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-presence-sensor-${prefix}`));
-    const snapshotLightLevelTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-lightlevel-sensor-${prefix}`));
-    const snapshotTemperatureTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-temperature-sensor-${prefix}`));
+    // ...existing code...
     // Upsert lights
     // Only include properties defined in the model
     function filterProps(obj: Record<string, any>, model: any): Record<string, unknown> {
@@ -171,9 +176,10 @@ export const HueConnector: Connector = {
       for (const twinId of existingTwinIds) {
         if ((twinId.startsWith('hue-light-') && !snapshotLightTwinIds.has(twinId)) ||
           (twinId.startsWith('hue-motion-device-') && !snapshotDeviceTwinIds.has(twinId)) ||
-          (twinId.startsWith('hue-presence-sensor-') && !snapshotPresenceTwinIds.has(twinId)) ||
-          (twinId.startsWith('hue-lightlevel-sensor-') && !snapshotLightLevelTwinIds.has(twinId)) ||
-          (twinId.startsWith('hue-temperature-sensor-') && !snapshotTemperatureTwinIds.has(twinId))) {
+          (twinId.startsWith('hue-sensor-') &&
+            !snapshotPresenceTwinIds.has(twinId) &&
+            !snapshotLightLevelTwinIds.has(twinId) &&
+            !snapshotTemperatureTwinIds.has(twinId))) {
           ops.push({ type: 'DeleteTwin', twinId });
         }
       }

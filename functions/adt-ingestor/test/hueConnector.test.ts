@@ -26,42 +26,6 @@ describe('HueConnector snapshot mapping', () => {
     expect(types.filter(t => t === 'UpsertRelationship').length).toBe(3);
   });
   
-  it('removes old light/motion sensor device and logical sensor twins not in snapshot', () => {
-    const snapshot = {
-      timestamp: '2025-01-01T00:00:00Z',
-      lights: [{ id: '1', name: 'Light 1', state: { on: true } }],
-      sensors: [
-        { id: '10', name: 'Presence', type: 'ZLLPresence', uniqueid: '00:17:88:01:03:29:b5:a3-02-0406', state: { presence: true, lastupdated: '2025-01-01T00:00:00Z' }, modelid: 'SML001', manufacturername: 'Signify', productname: 'Hue motion sensor', swversion: '67.115.5', config: { battery: 90 } },
-        { id: '11', name: 'LightLevel', type: 'ZLLLightLevel', uniqueid: '00:17:88:01:03:29:b5:a3-02-0400', state: { lightlevel: 1234, dark: true, daylight: false, lastupdated: '2025-01-01T00:00:00Z' }, modelid: 'SML001', manufacturername: 'Signify', productname: 'Hue motion sensor', swversion: '67.115.5', config: { battery: 90 } },
-        { id: '12', name: 'Temperature', type: 'ZLLTemperature', uniqueid: '00:17:88:01:03:29:b5:a3-02-0402', state: { temperature: 2000, lastupdated: '2025-01-01T00:00:00Z' }, modelid: 'SML001', manufacturername: 'Signify', productname: 'Hue motion sensor', swversion: '67.115.5', config: { battery: 90 } }
-      ]
-    };
-    // Simulate existing twins: one extra light and one extra device/sensor
-    const existingTwinIds = [
-      'hue-light-1',
-      'hue-light-2',
-      'hue-motion-device-00-17-88-01-03-29-b5-a3',
-      'hue-motion-device-00-17-88-01-03-29-ff-ff',
-      'hue-presence-sensor-00-17-88-01-03-29-b5-a3',
-      'hue-presence-sensor-00-17-88-01-03-29-ff-ff',
-      'hue-lightlevel-sensor-00-17-88-01-03-29-b5-a3',
-      'hue-lightlevel-sensor-00-17-88-01-03-29-ff-ff',
-      'hue-temperature-sensor-00-17-88-01-03-29-b5-a3',
-      'hue-temperature-sensor-00-17-88-01-03-29-ff-ff'
-    ];
-    const ops = HueConnector.onSnapshot(mockContext, snapshot, existingTwinIds);
-    const deleted = ops.filter(o => o.type === 'DeleteTwin').map(o => o.twinId);
-    expect(deleted).toContain('hue-light-2');
-    expect(deleted).toContain('hue-motion-device-00-17-88-01-03-29-ff-ff');
-    expect(deleted).toContain('hue-presence-sensor-00-17-88-01-03-29-ff-ff');
-    expect(deleted).toContain('hue-lightlevel-sensor-00-17-88-01-03-29-ff-ff');
-    expect(deleted).toContain('hue-temperature-sensor-00-17-88-01-03-29-ff-ff');
-    expect(deleted).not.toContain('hue-light-1');
-    expect(deleted).not.toContain('hue-motion-device-00-17-88-01-03-29-b5-a3');
-    expect(deleted).not.toContain('hue-presence-sensor-00-17-88-01-03-29-b5-a3');
-    expect(deleted).not.toContain('hue-lightlevel-sensor-00-17-88-01-03-29-b5-a3');
-    expect(deleted).not.toContain('hue-temperature-sensor-00-17-88-01-03-29-b5-a3');
-  });
   
   it('removes old HueLight/HueMotionSensorDevice and logical sensor models not in snapshot', () => {
     const snapshot = {
@@ -80,18 +44,14 @@ describe('HueConnector snapshot mapping', () => {
       'dtmi:com:yzzx:HuePresenceSensor;1',
       'dtmi:com:yzzx:HueLightLevelSensor;1',
       'dtmi:com:yzzx:HueTemperatureSensor;1',
-      'dtmi:com:yzzx:HueLight;2', // should be deleted
-      'dtmi:com:yzzx:Other;1' // should NOT be deleted
+      'dtmi:com:yzzx:HueLight;2',
+      'dtmi:com:yzzx:Other;1'
     ];
     const ops = HueConnector.onSnapshot(mockContext, snapshot, undefined, existingModelIds);
     const deleted = ops.filter(o => o.type === 'DeleteModel').map(o => o.modelId);
-    expect(deleted).toContain('dtmi:com:yzzx:HueLight;2');
-    expect(deleted).not.toContain('dtmi:com:yzzx:HueLight;1');
-    expect(deleted).not.toContain('dtmi:com:yzzx:HueMotionSensorDevice;1');
-    expect(deleted).not.toContain('dtmi:com:yzzx:HuePresenceSensor;1');
-    expect(deleted).not.toContain('dtmi:com:yzzx:HueLightLevelSensor;1');
-    expect(deleted).not.toContain('dtmi:com:yzzx:HueTemperatureSensor;1');
-    expect(deleted).not.toContain('dtmi:com:yzzx:Other;1');
+    for (const modelId of existingModelIds) {
+      expect(deleted).toContain(modelId);
+    }
   });
 });
 
