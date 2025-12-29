@@ -68,8 +68,8 @@ export const HueConnector: Connector = {
     function filterProps(obj: Record<string, any>, model: any): Record<string, unknown> {
       const allowed = new Set((model.contents || []).filter((c: any) => c['@type'] === 'Property').map((c: any) => c.name));
       const out: Record<string, unknown> = {};
-      for (const key of allowed) {
-        if (obj[key] !== undefined) out[key] = obj[key];
+      for (const key of Array.from(allowed)) {
+        if (typeof key === 'string' && obj[key] !== undefined) out[key] = obj[key];
       }
       // Special handling for metadata map in HueLight
       if (model.displayName === 'HueLight' && allowed.has('metadata')) {
