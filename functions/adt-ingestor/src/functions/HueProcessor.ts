@@ -35,7 +35,19 @@ app.eventHub('HueProcessor', {
 
 			let ops;
 			if (kind === 'snapshot') {
-				ops = connector.onSnapshot(context, event as AssetSnapshotEvent);
+				// Fetch all existing twin and model IDs from ADT
+				// Collect all twin IDs
+				// Collect all twin IDs using queryTwins
+				const existingTwinIds: string[] = [];
+				for await (const twin of client.queryTwins("SELECT * FROM digitaltwins")) {
+					if (twin && typeof twin.$dtId === 'string') existingTwinIds.push(twin.$dtId);
+				}
+				// Collect all model IDs using model.id
+				const existingModelIds: string[] = [];
+				for await (const model of client.listModels()) {
+					if (model && model.id) existingModelIds.push(model.id);
+				}
+				ops = connector.onSnapshot(context, event as AssetSnapshotEvent, existingTwinIds, existingModelIds);
 			} else if (kind === 'change') {
 				ops = connector.onChange(context, event as AssetChangeEvent);
 			} else {
