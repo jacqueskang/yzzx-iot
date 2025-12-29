@@ -1,3 +1,4 @@
+import { InvocationContext } from '@azure/functions';
 import type { AdtOperation } from '../../core/operations.js';
 import { HueModels, ModelIds, lightTwinId } from './hueModels.js';
 import { AssetSnapshotEvent, AssetChangeEvent } from '../../models/AssetEvent.js';
@@ -9,13 +10,20 @@ export interface Connector {
    * @param existingTwinIds (optional) array of all current twin IDs in ADT
    * @param existingModelIds (optional) array of all current model IDs in ADT
    */
-  onSnapshot: (event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) => AdtOperation[];
-  onChange: (event: AssetChangeEvent) => AdtOperation[];
+  onSnapshot: (
+    context: InvocationContext,
+    event: AssetSnapshotEvent,
+    existingTwinIds?: string[],
+    existingModelIds?: string[])
+    => AdtOperation[];
+  onChange: (
+    context: InvocationContext,
+    event: AssetChangeEvent) => AdtOperation[];
 }
 
 export const HueConnector: Connector = {
   key: 'hue',
-  onSnapshot: (event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) => {
+  onSnapshot: (context: InvocationContext, event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) => {
     const ts = event?.timestamp || new Date().toISOString();
     const ops: AdtOperation[] = [];
     // Ensure models exist
@@ -28,7 +36,7 @@ export const HueConnector: Connector = {
     const skippedSensors = (event?.sensors || []).filter(s => s.type === 'Daylight' || s.type === 'ZLLSwitch');
     for (const s of skippedSensors) {
       // eslint-disable-next-line no-console
-      console.debug(`[HueConnector] Skipping sensor type: ${s.type}, id: ${s.id}, name: ${s.name}`);
+      context.warn(`[HueConnector] Skipping sensor type: ${s.type}, id: ${s.id}, name: ${s.name}`);
     }
     // Map: uniqueidPrefix -> { device, presence, lightlevel, temperature }
     const sensorGroups: Record<string, any> = {};
@@ -163,10 +171,10 @@ export const HueConnector: Connector = {
     if (existingTwinIds) {
       for (const twinId of existingTwinIds) {
         if ((twinId.startsWith('hue-light-') && !snapshotLightTwinIds.has(twinId)) ||
-            (twinId.startsWith('hue-motion-device-') && !snapshotDeviceTwinIds.has(twinId)) ||
-            (twinId.startsWith('hue-presence-sensor-') && !snapshotPresenceTwinIds.has(twinId)) ||
-            (twinId.startsWith('hue-lightlevel-sensor-') && !snapshotLightLevelTwinIds.has(twinId)) ||
-            (twinId.startsWith('hue-temperature-sensor-') && !snapshotTemperatureTwinIds.has(twinId))) {
+          (twinId.startsWith('hue-motion-device-') && !snapshotDeviceTwinIds.has(twinId)) ||
+          (twinId.startsWith('hue-presence-sensor-') && !snapshotPresenceTwinIds.has(twinId)) ||
+          (twinId.startsWith('hue-lightlevel-sensor-') && !snapshotLightLevelTwinIds.has(twinId)) ||
+          (twinId.startsWith('hue-temperature-sensor-') && !snapshotTemperatureTwinIds.has(twinId))) {
           ops.push({ type: 'DeleteTwin', twinId });
         }
       }
@@ -179,18 +187,18 @@ export const HueConnector: Connector = {
         if (hueModelIds.has(modelId)) continue; // keep current models
         // Only delete models that look like HueLight, HueMotionSensorDevice, or new sensor models for yzzx namespace
         if (typeof modelId === 'string' &&
-            (modelId.includes('dtmi:com:yzzx:HueLight') ||
-             modelId.includes('dtmi:com:yzzx:HueMotionSensorDevice') ||
-             modelId.includes('dtmi:com:yzzx:HuePresenceSensor') ||
-             modelId.includes('dtmi:com:yzzx:HueLightLevelSensor') ||
-             modelId.includes('dtmi:com:yzzx:HueTemperatureSensor'))) {
+          (modelId.includes('dtmi:com:yzzx:HueLight') ||
+            modelId.includes('dtmi:com:yzzx:HueMotionSensorDevice') ||
+            modelId.includes('dtmi:com:yzzx:HuePresenceSensor') ||
+            modelId.includes('dtmi:com:yzzx:HueLightLevelSensor') ||
+            modelId.includes('dtmi:com:yzzx:HueTemperatureSensor'))) {
           ops.push({ type: 'DeleteModel', modelId });
         }
       }
     }
     return ops;
   },
-  onChange: (event) => {
+  onChange: (context: InvocationContext, event: AssetChangeEvent) => {
     const ts = event?.timestamp || new Date().toISOString();
     const ops: AdtOperation[] = [];
     for (const ch of event?.changes || []) {
@@ -212,12 +220,12 @@ export const HueConnector: Connector = {
         }
         if (!sensorType || !uniqueid) {
           // eslint-disable-next-line no-console
-          console.debug(`[HueConnector] Skipping change for missing sensorType/uniqueid, id: ${ch.id}`);
+          context.warn(`[HueConnector] Skipping change for missing sensorType/uniqueid, id: ${ch.id}`);
           continue;
         }
         if (sensorType === 'Daylight' || sensorType === 'ZLLSwitch') {
           // eslint-disable-next-line no-console
-          console.debug(`[HueConnector] Skipping change for sensor type: ${sensorType}, id: ${ch.id}`);
+          context.warn(`[HueConnector] Skipping change for sensor type: ${sensorType}, id: ${ch.id}`);
           continue;
         }
         const match = uniqueid.match(/^(.*)-02-(0406|0400|0402)$/);
