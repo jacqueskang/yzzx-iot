@@ -24,7 +24,7 @@ export const HueConnector: Connector = {
       const metadata: Record<string, string> = {};
       for (const key of [
         'name', 'type', 'modelid', 'manufacturername', 'productname', 'uniqueid',
-        'swversion', 'swconfigid', 'productid', 'lastSeen', 'status']) {
+        'swversion', 'swconfigid', 'productid', 'status']) { // removed 'lastSeen'
         if (l[key] != null) metadata[key] = String(l[key]);
       }
       ops.push({
@@ -62,9 +62,7 @@ export const HueConnector: Connector = {
     for (const ch of event?.changes || []) {
       if (ch.type === 'light') {
         const ltId = lightTwinId(String(ch.id));
-        const patch: { op: 'add'; path: string; value: unknown }[] = [
-          { op: 'add', path: '/lastSeen', value: ts }
-        ];
+        const patch: { op: 'add'; path: string; value: unknown }[] = [];
         for (const p of ch.properties || []) {
           // Use property name directly as patch path
           patch.push({ op: 'add', path: `/${p.property}`, value: p.newValue });
