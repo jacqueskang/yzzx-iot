@@ -1,6 +1,13 @@
 import { InvocationContext } from '@azure/functions';
 import type { AdtOperation } from '../../core/operations.js';
 import { HueModels, ModelIds, lightTwinId } from './hueModels.js';
+import {
+  HueLightModel,
+  HueMotionSensorDeviceModel,
+  HuePresenceSensorModel,
+  HueLightLevelSensorModel,
+  HueTemperatureSensorModel
+} from './hueModels.js';
 import { AssetSnapshotEvent, AssetChangeEvent } from '../../models/AssetEvent.js';
 
 export interface Connector {
@@ -24,7 +31,6 @@ export interface Connector {
 export const HueConnector: Connector = {
   key: 'hue',
   onSnapshot: (context: InvocationContext, event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) => {
-    const ts = event?.timestamp || new Date().toISOString();
     const ops: AdtOperation[] = [];
     // Ensure models exist
     ops.push({ type: 'EnsureModels', models: HueModels });
@@ -35,7 +41,6 @@ export const HueConnector: Connector = {
     const sensors = (event?.sensors || []).filter(s => s.type !== 'Daylight' && s.type !== 'ZLLSwitch');
     const skippedSensors = (event?.sensors || []).filter(s => s.type === 'Daylight' || s.type === 'ZLLSwitch');
     for (const s of skippedSensors) {
-      // eslint-disable-next-line no-console
       context.warn(`[HueConnector] Skipping sensor type: ${s.type}, id: ${s.id}, name: ${s.name}`);
     }
     // Map: uniqueidPrefix -> { device, presence, lightlevel, temperature }
@@ -59,110 +64,104 @@ export const HueConnector: Connector = {
     const snapshotLightLevelTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-lightlevel-sensor-${prefix}`));
     const snapshotTemperatureTwinIds = new Set(Object.keys(sensorGroups).map(prefix => `hue-temperature-sensor-${prefix}`));
     // Upsert lights
+    // Only include properties defined in the model
+    function filterProps(obj: Record<string, any>, model: any): Record<string, unknown> {
+      const allowed = new Set((model.contents || []).filter((c: any) => c['@type'] === 'Property').map((c: any) => c.name));
+      const out: Record<string, unknown> = {};
+      for (const key of allowed) {
+        if (obj[key] !== undefined) out[key] = obj[key];
+      }
+      // Special handling for metadata map in HueLight
+      if (model.displayName === 'HueLight' && allowed.has('metadata')) {
+        const metadata: Record<string, string> = {};
+        for (const k of [
+          'name', 'type', 'modelid', 'manufacturername', 'productname', 'uniqueid',
+          'swversion', 'swconfigid', 'productid', 'status']) {
+          if (obj[k] != null) metadata[k] = String(obj[k]);
+        }
+        out['metadata'] = metadata;
+      }
+      return out;
+    }
     for (const l of event?.lights || []) {
       const ltId = lightTwinId(String(l.id));
       const state = l.state || {};
-      const metadata: Record<string, string> = {};
-      for (const key of [
-        'name', 'type', 'modelid', 'manufacturername', 'productname', 'uniqueid',
-        'swversion', 'swconfigid', 'productid', 'status']) {
-        if (l[key] != null) metadata[key] = String(l[key]);
-      }
+      const props = filterProps({ ...l, ...state }, HueLightModel);
       ops.push({
         type: 'UpsertTwin',
         twinId: ltId,
         modelId: ModelIds.light,
-        properties: {
-          id: l.id,
-          on: state.on,
-          bri: state.bri,
-          ct: state.ct,
-          alert: state.alert,
-          colormode: state.colormode,
-          mode: state.mode,
-          reachable: state.reachable,
-          metadata
-        }
+        properties: props
       });
     }
-    // Upsert motion sensor device and logical sensors
+    // Upsert device twin and logical sensor twins
     for (const [prefix, group] of Object.entries(sensorGroups)) {
       const device = group.device;
       const deviceTwinId = `hue-motion-device-${prefix}`;
+      const deviceProps = filterProps({
+        name: device.name,
+        uniqueid: prefix,
+        modelid: device.modelid,
+        manufacturername: device.manufacturername,
+        productname: device.productname,
+        swversion: device.swversion,
+        battery: device.config?.battery
+      }, HueMotionSensorDeviceModel);
       ops.push({
         type: 'UpsertTwin',
         twinId: deviceTwinId,
         modelId: ModelIds.motionSensorDevice,
-        properties: {
-          name: device.name,
-          uniqueid: prefix,
-          modelid: device.modelid,
-          manufacturername: device.manufacturername,
-          productname: device.productname,
-          swversion: device.swversion,
-          battery: device.config?.battery
-        }
+        properties: deviceProps
       });
-      // Presence
       if (group.presence) {
-        const tId = `hue-presence-sensor-${prefix}`;
+        const twinId = `hue-sensor-${group.presence.id}`;
+        const props = filterProps({ ...group.presence, ...group.presence.state }, HuePresenceSensorModel);
         ops.push({
           type: 'UpsertTwin',
-          twinId: tId,
+          twinId,
           modelId: ModelIds.presenceSensor,
-          properties: {
-            presence: group.presence.state?.presence ?? false,
-            lastupdated: group.presence.state?.lastupdated || ''
-          }
+          properties: props
         });
         ops.push({
           type: 'UpsertRelationship',
           srcTwinId: deviceTwinId,
-          relationshipId: `${deviceTwinId}-hasSensor-${tId}`,
+          relationshipId: `${deviceTwinId}-hasSensor-${twinId}`,
           relationshipName: 'hasSensor',
-          targetTwinId: tId
+          targetTwinId: twinId
         });
       }
-      // LightLevel
       if (group.lightlevel) {
-        const tId = `hue-lightlevel-sensor-${prefix}`;
+        const twinId = `hue-sensor-${group.lightlevel.id}`;
+        const props = filterProps({ ...group.lightlevel, ...group.lightlevel.state }, HueLightLevelSensorModel);
         ops.push({
           type: 'UpsertTwin',
-          twinId: tId,
+          twinId,
           modelId: ModelIds.lightLevelSensor,
-          properties: {
-            lightlevel: group.lightlevel.state?.lightlevel ?? 0,
-            dark: group.lightlevel.state?.dark ?? false,
-            daylight: group.lightlevel.state?.daylight ?? false,
-            lastupdated: group.lightlevel.state?.lastupdated || ''
-          }
+          properties: props
         });
         ops.push({
           type: 'UpsertRelationship',
           srcTwinId: deviceTwinId,
-          relationshipId: `${deviceTwinId}-hasSensor-${tId}`,
+          relationshipId: `${deviceTwinId}-hasSensor-${twinId}`,
           relationshipName: 'hasSensor',
-          targetTwinId: tId
+          targetTwinId: twinId
         });
       }
-      // Temperature
       if (group.temperature) {
-        const tId = `hue-temperature-sensor-${prefix}`;
+        const twinId = `hue-sensor-${group.temperature.id}`;
+        const props = filterProps({ ...group.temperature, ...group.temperature.state }, HueTemperatureSensorModel);
         ops.push({
           type: 'UpsertTwin',
-          twinId: tId,
+          twinId,
           modelId: ModelIds.temperatureSensor,
-          properties: {
-            temperature: group.temperature.state?.temperature ?? 0,
-            lastupdated: group.temperature.state?.lastupdated || ''
-          }
+          properties: props
         });
         ops.push({
           type: 'UpsertRelationship',
           srcTwinId: deviceTwinId,
-          relationshipId: `${deviceTwinId}-hasSensor-${tId}`,
+          relationshipId: `${deviceTwinId}-hasSensor-${twinId}`,
           relationshipName: 'hasSensor',
-          targetTwinId: tId
+          targetTwinId: twinId
         });
       }
     }
@@ -199,7 +198,6 @@ export const HueConnector: Connector = {
     return ops;
   },
   onChange: (context: InvocationContext, event: AssetChangeEvent) => {
-    const ts = event?.timestamp || new Date().toISOString();
     const ops: AdtOperation[] = [];
     for (const ch of event?.changes || []) {
       if (ch.type === 'light') {
@@ -210,33 +208,8 @@ export const HueConnector: Connector = {
         }
         ops.push({ type: 'PatchTwin', twinId: ltId, patch });
       } else if (ch.type === 'sensor') {
-        // Try to extract sensorType and uniqueid from properties array
-        let sensorType = '', uniqueid = '';
-        if (Array.isArray(ch.properties)) {
-          for (const p of ch.properties) {
-            if (p.property === 'type') sensorType = String(p.newValue);
-            if (p.property === 'uniqueid') uniqueid = String(p.newValue);
-          }
-        }
-        if (!sensorType || !uniqueid) {
-          // eslint-disable-next-line no-console
-          context.warn(`[HueConnector] Skipping change for missing sensorType/uniqueid, id: ${ch.id}`);
-          continue;
-        }
-        if (sensorType === 'Daylight' || sensorType === 'ZLLSwitch') {
-          // eslint-disable-next-line no-console
-          context.warn(`[HueConnector] Skipping change for sensor type: ${sensorType}, id: ${ch.id}`);
-          continue;
-        }
-        const match = uniqueid.match(/^(.*)-02-(0406|0400|0402)$/);
-        if (!match) continue;
-        const rawPrefix = match[1];
-        const prefix = rawPrefix.replace(/[^A-Za-z0-9\-\.\+%_#*?!(),=@$']/g, '-');
-        let twinId = '';
-        if (sensorType === 'ZLLPresence') twinId = `hue-presence-sensor-${prefix}`;
-        if (sensorType === 'ZLLLightLevel') twinId = `hue-lightlevel-sensor-${prefix}`;
-        if (sensorType === 'ZLLTemperature') twinId = `hue-temperature-sensor-${prefix}`;
-        if (!twinId) continue;
+        // Use simple twinId: hue-sensor-{id}
+        const twinId = `hue-sensor-${ch.id}`;
         const patch: { op: 'add'; path: string; value: unknown }[] = [];
         for (const p of ch.properties || []) {
           patch.push({ op: 'add', path: `/${p.property}`, value: p.newValue });
@@ -248,10 +221,3 @@ export const HueConnector: Connector = {
   }
 };
 
-function applyPropsPatch(base: Record<string, unknown>, properties: Array<{ property: string; newValue: unknown }>) {
-  const out = { ...(base || {}) } as any;
-  for (const p of properties || []) {
-    out[p.property] = p.newValue;
-  }
-  return out;
-}
