@@ -31,4 +31,7 @@ functions/**/local.settings.json
 # Build caches
 .turbo/
 
+# Azure Static Web Apps API build output
+/webapp/api-build/
+
 .terraform
