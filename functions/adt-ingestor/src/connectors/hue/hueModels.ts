@@ -5,7 +5,10 @@ export const HueLogicalSensorModel = {
   "@id": "dtmi:com:yzzx:HueLogicalSensor;1",
   "@type": "Interface",
   "@context": DTDL_CONTEXT,
-  "displayName": "HueLogicalSensor"
+  "displayName": "HueLogicalSensor",
+  "contents": [
+    { "@type": "Property", "name": "lastupdated", "schema": "dateTime" }
+  ]
 };
 // DTDL complex object for HueLight state
 
@@ -61,8 +64,7 @@ export const HuePresenceSensorModel = {
   "displayName": "HuePresenceSensor",
   "extends": ["dtmi:com:yzzx:HueLogicalSensor;1"],
   "contents": [
-    { "@type": "Property", "name": "presence", "schema": "boolean" },
-    { "@type": "Property", "name": "lastupdated", "schema": "string" }
+    { "@type": "Property", "name": "presence", "schema": "boolean" }
   ]
 };
 
@@ -75,8 +77,7 @@ export const HueLightLevelSensorModel = {
   "contents": [
     { "@type": "Property", "name": "lightlevel", "schema": "integer" },
     { "@type": "Property", "name": "dark", "schema": "boolean" },
-    { "@type": "Property", "name": "daylight", "schema": "boolean" },
-    { "@type": "Property", "name": "lastupdated", "schema": "string" }
+    { "@type": "Property", "name": "daylight", "schema": "boolean" }
   ]
 };
 
@@ -87,8 +88,7 @@ export const HueTemperatureSensorModel = {
   "displayName": "HueTemperatureSensor",
   "extends": ["dtmi:com:yzzx:HueLogicalSensor;1"],
   "contents": [
-    { "@type": "Property", "name": "temperature", "schema": "integer" },
-    { "@type": "Property", "name": "lastupdated", "schema": "string" }
+    { "@type": "Property", "name": "temperature", "schema": "integer" }
   ]
 };
 
