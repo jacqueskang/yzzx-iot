@@ -28,8 +28,7 @@ export class HueConnector {
 
   onSnapshot(event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) {
     const ops: AdtOperation[] = [];
-    if (existingTwinIds) ops.push(...HueConnector.deleteTwins(existingTwinIds));
-    if (existingModelIds) ops.push(...HueConnector.deleteModels(existingModelIds));
+    // Only ensure models, do not delete twins/models
     ops.push({ type: 'EnsureModels', models: HueModels });
 
     const sensors = (event?.sensors || []).filter(s => s.type !== 'Daylight' && s.type !== 'ZLLSwitch');
@@ -128,20 +127,7 @@ export class HueConnector {
       }
     }
 
-    if (existingModelIds) {
-      const hueModelIds = new Set(HueModels.map(m => m["@id"]));
-      for (const modelId of existingModelIds) {
-        if (hueModelIds.has(modelId)) continue;
-        if (typeof modelId === 'string' &&
-          (modelId.includes('dtmi:com:yzzx:HueLight') ||
-            modelId.includes('dtmi:com:yzzx:HueMotionSensorDevice') ||
-            modelId.includes('dtmi:com:yzzx:HuePresenceSensor') ||
-            modelId.includes('dtmi:com:yzzx:HueLightLevelSensor') ||
-            modelId.includes('dtmi:com:yzzx:HueTemperatureSensor'))) {
-          ops.push({ type: 'DeleteModel', modelId });
-        }
-      }
-    }
+    // Do not delete models on snapshot event
     return ops;
   }
 
@@ -201,11 +187,5 @@ export class HueConnector {
     return sensorGroups;
   }
 
-  private static deleteTwins(existingTwinIds: string[]): AdtOperation[] {
-    return existingTwinIds.map(twinId => ({ type: 'DeleteTwin', twinId }));
-  }
-
-  private static deleteModels(existingModelIds: string[]): AdtOperation[] {
-    return existingModelIds.map(modelId => ({ type: 'DeleteModel', modelId }));
-  }
+  // No longer needed: deleteTwins and deleteModels
 }
