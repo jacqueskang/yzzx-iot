@@ -1,5 +1,5 @@
 resource "azurerm_storage_account" "main" {
-  name                            = "func${local.suffix_clean}${random_string.sa_suffix.result}"
+  name                            = "st${local.suffix_clean}"
   resource_group_name             = azurerm_resource_group.main.name
   location                        = azurerm_resource_group.main.location
   account_kind                    = "StorageV2"
