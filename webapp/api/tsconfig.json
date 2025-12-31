@@ -1,7 +1,7 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../api-build",
+    "outDir": ".",
     "rootDir": ".",
     "module": "commonjs",
     "target": "es2020",
