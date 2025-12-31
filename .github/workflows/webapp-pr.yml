@@ -1,8 +1,12 @@
 name: PR Validation
 
+
 on:
   pull_request:
     branches: [ main ]
+    paths:
+      - 'webapp/**'
+      - '.github/workflows/webapp-*.yml'
 
 jobs:
   validate:
