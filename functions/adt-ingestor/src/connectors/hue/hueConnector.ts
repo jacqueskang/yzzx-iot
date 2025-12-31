@@ -59,7 +59,6 @@ function deleteModels(existingModelIds: string[]): AdtOperation[] {
 }
 
 export const HueConnector = {
-  key: 'hue',
   onSnapshot: (context: InvocationContext, event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) => {
     const ops: AdtOperation[] = [];
     // Remove all existing twins and models at the beginning
