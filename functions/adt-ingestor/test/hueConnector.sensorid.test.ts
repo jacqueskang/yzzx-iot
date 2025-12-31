@@ -17,7 +17,8 @@ describe('HueConnector sensor twinId', () => {
         }
       ]
     };
-    const ops = HueConnector.onChange(mockContext, event);
+    const connector = new HueConnector(mockContext);
+    const ops = connector.onChange(event);
     expect(ops.length).toBe(1);
     expect(ops[0].type).toBe('PatchTwin');
     expect(ops[0].twinId).toBe('hue-sensor-26');

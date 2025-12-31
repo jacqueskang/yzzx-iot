@@ -30,7 +30,8 @@ describe('HueConnector snapshot mapping', () => {
         { id: '12', name: 'Temperature', type: 'ZLLTemperature', uniqueid: '00:17:88:01:03:29:b5:a3-02-0402', state: { temperature: 2000, lastupdated: '2025-01-01T00:00:00Z' }, modelid: 'SML001', manufacturername: 'Signify', productname: 'Hue motion sensor', swversion: '67.115.5', config: { battery: 90 } }
       ]
     };
-    const ops = HueConnector.onSnapshot(mockContext, snapshot);
+    const connector = new HueConnector(mockContext);
+    const ops = connector.onSnapshot(snapshot);
     const types = ops.map(o => o.type);
     expect(types[0]).toBe('EnsureModels');
     // 1 light, 1 device, 3 logical sensors
@@ -60,7 +61,8 @@ describe('HueConnector snapshot mapping', () => {
       'dtmi:com:yzzx:HueLight;2',
       'dtmi:com:yzzx:Other;1'
     ];
-    const ops = HueConnector.onSnapshot(mockContext, snapshot, undefined, existingModelIds);
+    const connector = new HueConnector(mockContext);
+    const ops = connector.onSnapshot(snapshot, undefined, existingModelIds);
     const deleted = ops.filter(o => o.type === 'DeleteModel').map(o => o.modelId);
     for (const modelId of existingModelIds) {
       expect(deleted).toContain(modelId);

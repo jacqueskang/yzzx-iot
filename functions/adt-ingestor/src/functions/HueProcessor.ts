@@ -29,7 +29,7 @@ app.eventHub('HueProcessor', {
 		const client = getAdtClient(adtUrl);
 		try {
 			context.info('Handing event', JSON.stringify(event));
-			const connector = HueConnector;
+			const connector = new HueConnector(context);
 			const kind = classify(event);
 			context.debug('Event classified', { kind });
 
@@ -47,9 +47,9 @@ app.eventHub('HueProcessor', {
 				for await (const model of client.listModels()) {
 					if (model && model.id) existingModelIds.push(model.id);
 				}
-				ops = connector.onSnapshot(context, event as AssetSnapshotEvent, existingTwinIds, existingModelIds);
+				ops = connector.onSnapshot(event as AssetSnapshotEvent, existingTwinIds, existingModelIds);
 			} else if (kind === 'change') {
-				ops = connector.onChange(context, event as AssetChangeEvent);
+				ops = connector.onChange(event as AssetChangeEvent);
 			} else {
 				context.warn('Unknown event type, skipping...');
 				return;
