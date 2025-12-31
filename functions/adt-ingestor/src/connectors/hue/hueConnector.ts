@@ -13,23 +13,6 @@ import {
 import { AssetSnapshotEvent, AssetChangeEvent } from '../../models/AssetEvent.js';
 
 // Types
-export interface Connector {
-  key: string;
-  /**
-   * @param event AssetSnapshotEvent
-   * @param existingTwinIds (optional) array of all current twin IDs in ADT
-   * @param existingModelIds (optional) array of all current model IDs in ADT
-   */
-  onSnapshot: (
-    context: InvocationContext,
-    event: AssetSnapshotEvent,
-    existingTwinIds?: string[],
-    existingModelIds?: string[])
-    => AdtOperation[];
-  onChange: (
-    context: InvocationContext,
-    event: AssetChangeEvent) => AdtOperation[];
-}
 
 // Helpers
 function filterProps(obj: Record<string, any>, model: any): Record<string, unknown> {
@@ -75,7 +58,7 @@ function deleteModels(existingModelIds: string[]): AdtOperation[] {
   return existingModelIds.map(modelId => ({ type: 'DeleteModel', modelId }));
 }
 
-export const HueConnector: Connector = {
+export const HueConnector = {
   key: 'hue',
   onSnapshot: (context: InvocationContext, event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) => {
     const ops: AdtOperation[] = [];
