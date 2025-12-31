@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../api-build",
+    "rootDir": ".",
+    "module": "commonjs",
+    "target": "es2020",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "declaration": false,
+    "noEmit": false
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["../api-build", "node_modules"]
+}

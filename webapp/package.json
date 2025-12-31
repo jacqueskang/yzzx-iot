@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build:api": "tsc -p api/tsconfig.json",
+    "build": "vite build && npm run build:api",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx,.vue",
     "test": "vitest run",
@@ -15,6 +16,8 @@
     "vue": "^3.4.0"
   },
   "devDependencies": {
+    "@azure/functions": "^4.10.0",
+    "@types/node": "^25.0.3",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/eslint-config-typescript": "^12.0.0",
     "@vue/test-utils": "^2.4.1",
