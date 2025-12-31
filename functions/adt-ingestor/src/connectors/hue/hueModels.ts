@@ -1,4 +1,3 @@
-
 export const DTDL_CONTEXT = "dtmi:dtdl:context;3";
 
 export const HueLogicalSensorModel = {

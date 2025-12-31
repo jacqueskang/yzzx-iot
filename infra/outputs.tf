@@ -1,3 +1,7 @@
+output "static_web_app_url" {
+  value       = azurerm_static_web_app.main.default_host_name
+  description = "URL for the Azure Static Web App (default hostname)"
+}
 output "eventhub_connection_string" {
   value       = azurerm_iothub_shared_access_policy.eventhub_receiver.primary_connection_string
   description = "IoT Hub built-in Event Hub-compatible connection string"
