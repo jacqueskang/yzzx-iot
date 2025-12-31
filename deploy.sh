@@ -39,4 +39,11 @@ else
   echo "Skipping IoT Edge layer deployment."
 fi
 
+# --- PART 5: Deploy Webapp (yzzx-frontend) ---
+read -p "[5/5] Deploy Webapp (yzzx-frontend)? (y/n): " REPLY_WEBAPP
+if [[ "$REPLY_WEBAPP" =~ ^[Yy]$ ]]; then
+  ./scripts/deploy_webapp.sh
+else
+  echo "Skipping webapp deployment."
+fi
 echo "Deployment complete."
