@@ -1,8 +1,49 @@
-<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
-  <rect x="50" y="50" width="300" height="500" fill="#e0e0e0" stroke="#333" stroke-width="4"/>
-  <rect x="400" y="50" width="350" height="500" fill="#f5f5f5" stroke="#333" stroke-width="4"/>
-  <text x="200" y="320" font-size="32" fill="#333" text-anchor="middle">Living Room</text>
-  <text x="575" y="320" font-size="32" fill="#333" text-anchor="middle">Bedroom</text>
-  <rect x="375" y="250" width="50" height="100" fill="#bdbdbd" stroke="#333" stroke-width="2"/>
-  <text x="400" y="310" font-size="18" fill="#333">Door</text>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.0"
+   width="960.000000pt"
+   height="679.000000pt"
+   viewBox="0 0 960.000000 679.000000"
+   preserveAspectRatio="xMidYMid meet"
+   id="svg166"
+   sodipodi:docname="floorplan.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs166" />
+  <sodipodi:namedview
+     id="namedview166"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="pt"
+     inkscape:zoom="0.89248895"
+     inkscape:cx="536.70132"
+     inkscape:cy="331.65677"
+     inkscape:window-width="1920"
+     inkscape:window-height="1010"
+     inkscape:window-x="-6"
+     inkscape:window-y="-6"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g166" />
+  <g
+     transform="translate(0.000000,679.000000) scale(0.100000,-0.100000)"
+     fill="#000000"
+     stroke="none"
+     id="g166">
+    <path
+       d="m 4360,5130 v -940 h -970 -970 v -555 -555 h 165 164 l 3,-57 c 3,-57 3,-58 36,-61 l 32,-3 v 95 96 h -165 -165 v 485 485 h 970 970 v 940 939 l 113,3 112,3 3,33 3,32 h -150 -151 z"
+       id="path20"
+       sodipodi:nodetypes="ccccccccsccccccccccccccccccc" />
+    <path
+       d="M5017 6063 c-3 -5 -4 -19 -3 -33 1 -22 6 -25 49 -28 l47 -3 0 -235 0 -234 29 0 c17 0 33 5 36 10 4 7 302 10 861 10 l854 0 -2 -630 -3 -630 -855 0 -855 0 -3 440 -2 440 -30 0 -30 0 2 -847 3 -847 25 0 c18 0 26 6 30 24 6 25 7 25 133 28 l127 3 0 344 0 345 730 0 730 0 0 -560 0 -560 -860 0 c-567 0 -860 3 -860 10 0 6 -14 10 -31 10 -28 0 -30 -2 -27 -32 3 -29 7 -33 31 -32 17 1 27 -4 27 -12 0 -11 27 -14 133 -14 72 0 459 0 860 0 l727 0 0 -725 0 -725 -620 0 -620 0 0 550 0 550 -234 0 c-146 0 -237 4 -241 10 -3 6 -19 10 -36 10 -16 0 -29 -4 -29 -10 0 -6 -90 -10 -250 -10 l-250 0 0 -74 c0 -56 -4 -75 -15 -80 -9 -3 -15 -18 -15 -36 0 -20 5 -30 15 -30 13 0 15 -56 15 -440 l0 -440 -202 2 -203 3 -3 429 c-2 336 1 433 11 445 7 9 12 23 11 31 -1 8 -2 21 -3 28 -1 10 -43 12 -193 10 l-193 -3 -3 -32 -3 -33 150 0 151 0 0 -440 0 -440 -655 0 -655 0 0 440 0 440 326 0 325 0 -3 33 -3 32 -322 3 -322 2 -3 38 c-3 34 -6 37 -33 37 l-30 0 -3 -542 -2 -543 2105 0 2105 0 0 2050 0 2050 -895 0 -895 0 0 225 0 225 -74 0 c-41 0 -77 -3 -79 -7z m341 -2155 l2 -308 -95 0 -95 0 0 303 c0 167 3 307 7 311 4 4 46 5 93 4 l85 -3 3 -307z m222 -1813 l0 -515 -450 0 -450 0 0 515 0 515 450 0 450 0 0 -515z"
+       id="path21" />
+  </g>
 </svg>
