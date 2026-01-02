@@ -25,6 +25,7 @@ resource "azurerm_function_app_flex_consumption" "main" {
       "SharedAccessKey=", azurerm_iothub_shared_access_policy.eventhub_receiver.primary_key, ";",
       "EntityPath=", azurerm_iothub.main.event_hub_events_path
     ])
+    ROOMS_JSON = jsonencode(var.rooms)
   }
 
   site_config {
