@@ -22,9 +22,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="0.70710678"
-     inkscape:cx="786.30275"
-     inkscape:cy="333.7544"
+     inkscape:zoom="1"
+     inkscape:cx="279.5"
+     inkscape:cy="398"
      inkscape:window-width="1920"
      inkscape:window-height="1010"
      inkscape:window-x="-6"
@@ -48,13 +48,219 @@
        visible="true" />
   </sodipodi:namedview>
   <g
-     transform="translate(0.000000,679.000000) scale(0.100000,-0.100000)"
      fill="#000000"
      stroke="none"
-     id="walls">
+     id="walls"
+     transform="translate(0,-1)">
     <path
        id="path1"
-       d="m 5100,2640 h 500 V 1590 h -950 v 1050 h 50 v 50 h -100 v -150 h -50 v -50 h 50 v -900 h -450 v 900 h 50 v 50 h -350 v -50 h 250 V 1590 H 2800 v 900 h 700 v 50 h -700 v 750 h -550 v 850 h 2150 v 1900 h 200 v 50 H 4350 V 4190 H 2200 v -950 h 550 V 1540 H 6950 V 5590 H 5150 v 500 h -150 v -50 h 100 V 5540 H 6900 V 4290 H 5150 v 900 h -50 v -950 h 250 v -750 h -250 v -50 h 300 v 800 H 6900 V 3090 H 5100 l -0.1602,-49.9979 L 6900,3040 V 1590 H 5650 v 1100 h -550 z"
+       d="m 510,436 h 50 V 541 H 465 V 436 h 5 v -5 h -10 v 15 h -5 v 5 h 5 v 90 h -45 v -90 h 5 v -5 h -35 v 5 h 25 v 90 H 280 v -90 h 70 v -5 H 280 V 371 H 225 V 286 H 440 V 96 h 20 V 91 H 435 V 281 H 220 v 95 h 55 V 546 H 695 V 141 H 515 V 91 h -15 v 5 h 10 v 50 H 690 V 271 H 515 v -90 h -5 v 95 h 25 v 75 h -25 v 5 h 30 V 276 H 690 V 391 H 510 l -0.016,5 H 690 V 541 H 565 V 431 h -55 z"
        sodipodi:nodetypes="ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" />
+  </g>
+  <g
+     fill="#ffffff"
+     stroke="none"
+     id="g1"
+     transform="translate(0,-1)"
+     inkscape:label="room-bedroom"
+     style="display:inline">
+    <path
+       id="room-bedroom"
+       inkscape:label="path1"
+       d="m 515,396 h 175 v 34 111 H 565 V 431 h -50 z"
+       sodipodi:nodetypes="cccccccc"
+       style="display:inline;fill:#c6ebc9;fill-opacity:1"
+       sodipodi:insensitive="true" />
+    <text
+       xml:space="preserve"
+       x="614.90625"
+       y="472.42871"
+       id="text2-2-9-8-7"
+       inkscape:label="label"><tspan
+         sodipodi:role="line"
+         id="tspan7">卧室</tspan></text>
+  </g>
+  <g
+     fill="#ffffff"
+     stroke="none"
+     id="g2"
+     transform="translate(0,-1)"
+     inkscape:label="room-bathroom"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <path
+       id="path2"
+       inkscape:label="path1"
+       d="m 465,435 95,1 v 105 h -95 z"
+       sodipodi:nodetypes="ccccc"
+       style="display:inline;fill:#c6ebc9;fill-opacity:1"
+       sodipodi:insensitive="true" />
+    <text
+       xml:space="preserve"
+       x="500.78125"
+       y="491.92871"
+       id="text2-2-9-8-5"
+       inkscape:label="label"><tspan
+         sodipodi:role="line"
+         id="tspan6"
+         x="500.78125"
+         y="491.92871">浴室</tspan></text>
+  </g>
+  <g
+     fill="#ffffff"
+     stroke="none"
+     id="g2-9"
+     transform="translate(-40,-51)"
+     inkscape:label="room-toilette"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <path
+       id="path2-4"
+       inkscape:label="path1"
+       d="m 455,501 h 45 v 90 h -45 z"
+       sodipodi:nodetypes="ccccc"
+       style="display:inline;fill:#c6ebc9;fill-opacity:1"
+       sodipodi:insensitive="true" />
+    <text
+       xml:space="preserve"
+       x="465.78125"
+       y="549.72559"
+       id="text2-2-9-8"
+       inkscape:label="label"><tspan
+         sodipodi:role="line"
+         id="tspan5"
+         x="0"
+         y="0">厕所</tspan></text>
+  </g>
+  <g
+     fill="#ffffff"
+     stroke="none"
+     id="g2-9-8"
+     transform="translate(-70,-51)"
+     inkscape:label="room-kitchen"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <path
+       id="path2-4-2"
+       inkscape:label="path1"
+       d="m 350,501 h 130 v 90 H 350 Z"
+       sodipodi:nodetypes="ccccc"
+       style="display:inline;fill:#c6ebc9;fill-opacity:1" />
+    <text
+       xml:space="preserve"
+       x="406.70312"
+       y="549.875"
+       id="text2-2-9"
+       inkscape:label="label"><tspan
+         sodipodi:role="line"
+         id="tspan1-4"
+         x="406.70312"
+         y="549.875">厨房</tspan></text>
+  </g>
+  <g
+     fill="#ffffff"
+     stroke="none"
+     id="g2-9-8-5"
+     transform="translate(-80,-111)"
+     inkscape:label="room-bureau"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <path
+       id="path2-4-2-5"
+       inkscape:label="path1"
+       d="M 620,386 H 770 V 501 H 595 v -35 h 25 z"
+       sodipodi:nodetypes="ccccccc"
+       style="display:inline;fill:#c6ebc9;fill-opacity:1" />
+    <text
+       xml:space="preserve"
+       x="681.70312"
+       y="444.875"
+       id="text2-2"
+       inkscape:label="label"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         x="681.70312"
+         y="444.875">办公室</tspan></text>
+  </g>
+  <g
+     fill="#ffffff"
+     stroke="none"
+     id="g2-9-8-5-7"
+     transform="translate(-280,29)"
+     inkscape:label="room-guestroom"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <path
+       id="path2-4-2-5-1"
+       inkscape:label="path1"
+       d="M 795,116 H 970 V 241 H 795 Z"
+       sodipodi:nodetypes="ccccc"
+       style="display:inline;fill:#c6ebc9;fill-opacity:1" />
+    <text
+       xml:space="preserve"
+       x="870.47656"
+       y="182.78906"
+       id="text2"
+       inkscape:label="label"><tspan
+         sodipodi:role="line"
+         id="tspan2"
+         x="870.47656"
+         y="182.78906">客房</tspan></text>
+  </g>
+  <g
+     fill="#ffffff"
+     stroke="none"
+     id="g2-9-8-5-7-5"
+     transform="translate(-440,269)"
+     inkscape:label="room-entree"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <path
+       id="path2-4-2-5-1-2"
+       inkscape:label="path1"
+       d="m 880,-174 h 70 V 11 h -70 z"
+       sodipodi:nodetypes="ccccc"
+       style="display:inline;fill:#c6ebc9;fill-opacity:1"
+       sodipodi:insensitive="true" />
+    <text
+       xml:space="preserve"
+       x="906.70312"
+       y="-79.296875"
+       id="text2-8"
+       inkscape:label="label"
+       inkscape:transform-center-x="43.133514"
+       inkscape:transform-center-y="36.769553"><tspan
+         sodipodi:role="line"
+         id="tspan3"
+         x="906.70312"
+         y="-79.296875">门厅</tspan></text>
+  </g>
+  <g
+     fill="#ffffff"
+     stroke="none"
+     id="g2-9-8-5-7-5-6"
+     transform="translate(-450,409)"
+     inkscape:label="room-salon"
+     style="display:inline"
+     sodipodi:insensitive="true">
+    <path
+       id="path2-4-2-5-1-2-1"
+       inkscape:label="path1"
+       d="M 675,-124 H 960 V 21 H 910 V 36 H 730 v -75 h -55 z"
+       sodipodi:nodetypes="ccccccccc"
+       style="display:inline;fill:#c6ebc9;fill-opacity:1"
+       sodipodi:insensitive="true" />
+    <text
+       xml:space="preserve"
+       x="815.70312"
+       y="-45.505859"
+       id="text2-8-9"
+       inkscape:label="label"
+       inkscape:transform-center-x="43.133514"
+       inkscape:transform-center-y="36.769553"><tspan
+         sodipodi:role="line"
+         id="tspan4"
+         x="815.70312"
+         y="-45.505859">客厅</tspan></text>
   </g>
 </svg>
