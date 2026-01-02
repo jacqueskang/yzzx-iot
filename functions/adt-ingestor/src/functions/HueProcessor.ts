@@ -29,7 +29,7 @@ app.eventHub('HueProcessor', {
 		const client = getAdtClient(adtUrl);
 		try {
 			context.info('Handing event', JSON.stringify(event));
-			const connector = new HueConnector(context);
+			const connector = new HueConnector(context, { seedRooms: settings.rooms });
 			const kind = classify(event);
 			context.debug('Event classified', { kind });
 

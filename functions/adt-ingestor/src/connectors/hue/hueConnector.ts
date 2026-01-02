@@ -11,6 +11,7 @@ import {
   HueTemperatureSensorModel
 } from './hueModels.js';
 import { AssetSnapshotEvent, AssetChangeEvent } from '../../models/AssetEvent.js';
+import type { RoomConfig } from '../../config/settings.js';
 
 // Types
 interface SensorGroup {
@@ -21,15 +22,26 @@ interface SensorGroup {
 }
 export class HueConnector {
   private context: InvocationContext;
+  private seedRooms: RoomConfig[];
 
-  constructor(context: InvocationContext) {
+  constructor(context: InvocationContext, options?: { seedRooms?: RoomConfig[] }) {
     this.context = context;
+    this.seedRooms = options?.seedRooms || [];
   }
 
   onSnapshot(event: AssetSnapshotEvent) {
     const ops: AdtOperation[] = [];
     // Only ensure models, do not delete twins/models
     ops.push({ type: 'EnsureModels', models: HueModels });
+
+    for (const room of this.seedRooms) {
+      ops.push({
+        type: 'UpsertTwin',
+        twinId: room.id,
+        modelId: ModelIds.room,
+        properties: { id: room.id, name: room.name }
+      });
+    }
 
     const sensors = (event?.sensors || []).filter(s => s.type !== 'Daylight' && s.type !== 'ZLLSwitch');
     const skippedSensors = (event?.sensors || []).filter(s => s.type === 'Daylight' || s.type === 'ZLLSwitch');

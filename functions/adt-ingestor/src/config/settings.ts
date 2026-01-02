@@ -6,6 +6,12 @@ export interface Settings {
   sourcesEnabled: string[];
   maxRetries: number;
   retryBaseMs: number;
+  rooms: RoomConfig[];
+}
+
+export interface RoomConfig {
+  id: string;
+  name: string;
 }
 
 export function loadSettings(): Settings {
@@ -21,6 +27,20 @@ export function loadSettings(): Settings {
     adtServiceUrl: process.env.ADT_SERVICE_URL || '',
     sourcesEnabled: sources,
     maxRetries: Number(process.env.MAX_RETRIES || 5),
-    retryBaseMs: Number(process.env.RETRY_BASE_MS || 500)
+    retryBaseMs: Number(process.env.RETRY_BASE_MS || 500),
+    rooms: loadRooms()
   };
+}
+
+function loadRooms(): RoomConfig[] {
+  const raw = process.env.ROOMS_JSON || '[]';
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(r => r && typeof r.id === 'string' && typeof r.name === 'string')
+      .map(r => ({ id: r.id, name: r.name }));
+  } catch {
+    return [];
+  }
 }
