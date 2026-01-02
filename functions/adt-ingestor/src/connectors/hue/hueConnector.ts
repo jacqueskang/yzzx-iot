@@ -26,7 +26,7 @@ export class HueConnector {
     this.context = context;
   }
 
-  onSnapshot(event: AssetSnapshotEvent, existingTwinIds?: string[], existingModelIds?: string[]) {
+  onSnapshot(event: AssetSnapshotEvent) {
     const ops: AdtOperation[] = [];
     // Only ensure models, do not delete twins/models
     ops.push({ type: 'EnsureModels', models: HueModels });
