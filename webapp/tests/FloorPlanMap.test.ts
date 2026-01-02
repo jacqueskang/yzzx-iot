@@ -11,4 +11,15 @@ describe("FloorPlanMap", () => {
     // Check for at least one device circle
     expect(wrapper.findAll("circle").length).toBeGreaterThan(0);
   });
+
+  it("expands the floor plan to full screen", async () => {
+    const wrapper = mount(FloorPlanMap);
+    await nextTick();
+
+    expect(wrapper.classes()).toContain("floor-plan");
+    const svg = wrapper.find("svg");
+    expect(svg.classes()).toContain("floor-plan__svg");
+    expect(svg.attributes("width")).toBe("100%");
+    expect(svg.attributes("height")).toBe("100%");
+  });
 });

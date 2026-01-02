@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <h1>yzzx Home Dashboard</h1>
     <FloorPlanMap />
   </div>
 </template>
@@ -14,6 +13,5 @@ import FloorPlanMap from "./components/FloorPlanMap.vue";
   font-family: Avenir, Helvetica, Arial, sans-serif;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 </style>
