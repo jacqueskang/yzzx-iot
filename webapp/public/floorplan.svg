@@ -109,9 +109,9 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="room-toilette"
+     id="room-wc"
      transform="translate(-40,-51)"
-     inkscape:label="room-toilette"
+     inkscape:label="room-wc"
      style="display:inline"
      sodipodi:insensitive="true">
     <path
@@ -160,9 +160,9 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="room-bureau"
+     id="room-office"
      transform="translate(-80,-111)"
-     inkscape:label="room-bureau"
+     inkscape:label="room-office"
      style="display:inline"
      sodipodi:insensitive="true">
     <path
@@ -185,9 +185,9 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="room-guestroom"
+     id="room-guest-room"
      transform="translate(-280,29)"
-     inkscape:label="room-guestroom"
+     inkscape:label="room-guest-room"
      style="display:inline"
      sodipodi:insensitive="true">
     <path
@@ -210,9 +210,9 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="room-entree"
+     id="room-entryway"
      transform="translate(-440,269)"
-     inkscape:label="room-entree"
+     inkscape:label="room-entryway"
      style="display:inline"
      sodipodi:insensitive="true">
     <path
@@ -238,9 +238,9 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="room-salon"
+     id="room-living-room"
      transform="translate(-450,409)"
-     inkscape:label="room-salon"
+     inkscape:label="room-living-room"
      style="display:inline"
      sodipodi:insensitive="true">
     <path
