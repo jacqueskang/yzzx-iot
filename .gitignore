@@ -12,7 +12,7 @@ pnpm-debug.log*
 .eslintcache
 
 # IDEs
-.vscode/
+
 .idea/
 *.iml
 
