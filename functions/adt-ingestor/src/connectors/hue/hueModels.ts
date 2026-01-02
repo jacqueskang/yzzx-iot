@@ -1,5 +1,16 @@
 export const DTDL_CONTEXT = "dtmi:dtdl:context;3";
 
+export const RoomModel = {
+  "@id": "dtmi:com:yzzx:Room;1",
+  "@type": "Interface",
+  "@context": DTDL_CONTEXT,
+  "displayName": "Room",
+  "contents": [
+    { "@type": "Property", "name": "id", "schema": "string" },
+    { "@type": "Property", "name": "name", "schema": "string" }
+  ]
+};
+
 export const HueLogicalSensorModel = {
   "@id": "dtmi:com:yzzx:HueLogicalSensor;1",
   "@type": "Interface",
@@ -25,6 +36,11 @@ export const HueLightModel = {
     { "@type": "Property", "name": "colormode", "schema": "string" },
     { "@type": "Property", "name": "mode", "schema": "string" },
     { "@type": "Property", "name": "reachable", "schema": "boolean" },
+    {
+      "@type": "Relationship",
+      "name": "locatedIn",
+      "target": RoomModel["@id"]
+    },
     {
       "@type": "Property", "name": "metadata", "schema": {
         "@type": "Map",
@@ -52,6 +68,11 @@ export const HueMotionSensorDeviceModel = {
       "@type": "Relationship",
       "name": "hasSensor",
       "target": "dtmi:com:yzzx:HueLogicalSensor;1"
+    },
+    {
+      "@type": "Relationship",
+      "name": "locatedIn",
+      "target": RoomModel["@id"]
     }
   ]
 };
@@ -92,6 +113,7 @@ export const HueTemperatureSensorModel = {
 };
 
 export const HueModels = [
+  RoomModel,
   HueLightModel,
   HueMotionSensorDeviceModel,
   HueLogicalSensorModel,
@@ -101,6 +123,7 @@ export const HueModels = [
 ];
 
 export const ModelIds = {
+  room: RoomModel["@id"],
   light: HueLightModel["@id"],
   motionSensorDevice: HueMotionSensorDeviceModel["@id"],
   logicalSensor: HueLogicalSensorModel["@id"],
