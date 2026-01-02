@@ -60,7 +60,7 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="g1"
+     id="room-bedroom"
      transform="translate(0,-1)"
      inkscape:label="room-bedroom"
      style="display:inline">
@@ -83,7 +83,7 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="g2"
+     id="room-bathroom"
      transform="translate(0,-1)"
      inkscape:label="room-bathroom"
      style="display:inline"
@@ -109,7 +109,7 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="g2-9"
+     id="room-toilette"
      transform="translate(-40,-51)"
      inkscape:label="room-toilette"
      style="display:inline"
@@ -135,7 +135,7 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="g2-9-8"
+     id="room-kitchen"
      transform="translate(-70,-51)"
      inkscape:label="room-kitchen"
      style="display:inline"
@@ -160,7 +160,7 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="g2-9-8-5"
+     id="room-bureau"
      transform="translate(-80,-111)"
      inkscape:label="room-bureau"
      style="display:inline"
@@ -185,7 +185,7 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="g2-9-8-5-7"
+     id="room-guestroom"
      transform="translate(-280,29)"
      inkscape:label="room-guestroom"
      style="display:inline"
@@ -210,7 +210,7 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="g2-9-8-5-7-5"
+     id="room-entree"
      transform="translate(-440,269)"
      inkscape:label="room-entree"
      style="display:inline"
@@ -238,7 +238,7 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="g2-9-8-5-7-5-6"
+     id="room-salon"
      transform="translate(-450,409)"
      inkscape:label="room-salon"
      style="display:inline"
