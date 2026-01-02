@@ -1,15 +1,22 @@
 {
   "name": "api",
   "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
+  "description": "",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rimraf dist",
+    "prestart": "npm run clean && npm run build",
+    "start": "func start",
+    "test": "echo \"No tests yet...\""
+  },
   "dependencies": {
-    "@azure/functions": "^4.10.0"
+    "@azure/functions": "^4.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "@types/node": "^20.x",
+    "typescript": "^5.0.0",
+    "rimraf": "^5.0.0"
   },
-  "scripts": {
-    "build": "tsc"
-  }
+  "main": "dist/src/{index.js,functions/*.js}"
 }
