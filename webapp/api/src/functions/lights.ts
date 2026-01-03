@@ -11,6 +11,7 @@ interface HueLight {
   id: string;
   name: string;
   on: boolean;
+  locatedIn: string | null;
 }
 
 export async function lights(
@@ -44,15 +45,44 @@ export async function lights(
     const client = new DigitalTwinsClient(adtUrl, credential);
 
     context.info(`Connecting to ADT at ${adtUrl}`);
-    const query = `SELECT t.$dtId as id, t.name as name, t.on as on FROM digitaltwins t WHERE IS_OF_MODEL(t, 'dtmi:com:yzzx:HueLight;1')`;
+
+    // First query: get all lights
+    const lightsQuery =
+      "SELECT t.$dtId AS id, t.metadata.name AS name, t.on AS on " +
+      "FROM digitaltwins t " +
+      "WHERE IS_OF_MODEL(t, 'dtmi:com:yzzx:HueLight;1')";
 
     const lights: HueLight[] = [];
-    for await (const result of client.queryTwins(query)) {
+    const lightIds: string[] = [];
+
+    for await (const result of client.queryTwins(lightsQuery)) {
+      lightIds.push(result.id);
       lights.push({
         id: result.id,
         name: result.name || "",
-        on: result.on || false,
+        on: Boolean(result.on),
+        locatedIn: null,
       });
+    }
+
+    // Second query: batch fetch all locatedIn relationships
+    if (lightIds.length > 0) {
+      const idsArray = lightIds.map((id) => `'${id}'`).join(", ");
+      const relationshipsQuery =
+        `SELECT light.$dtId as lightId, room.$dtId as roomId ` +
+        `FROM DIGITALTWINS light ` +
+        `JOIN room RELATED light.locatedIn ` +
+        `WHERE light.$dtId IN [${idsArray}]`;
+
+      const locationMap = new Map<string, string>();
+      for await (const result of client.queryTwins(relationshipsQuery)) {
+        locationMap.set(result.lightId, result.roomId);
+      }
+
+      // Update lights with location data
+      for (const light of lights) {
+        light.locatedIn = locationMap.get(light.id) ?? null;
+      }
     }
 
     context.info(`Retrieved ${lights.length} Hue lights from ADT`);
