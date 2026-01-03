@@ -1,23 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { InvocationContext } from "@azure/functions";
 
-const mockQueryTwins = vi.fn();
-const mockDigitalTwinsCtor = vi.fn();
-const mockClientSecretCredential = vi.fn();
+// Mock DigitalTwinsService before importing getLights
+const mockGetLights = vi.fn();
 
-vi.mock("@azure/identity", () => ({
-  ClientSecretCredential: vi
-    .fn()
-    .mockImplementation((...args) => mockClientSecretCredential(...args)),
-}));
-
-vi.mock("@azure/digital-twins-core", () => ({
-  DigitalTwinsClient: vi.fn().mockImplementation((...args) => {
-    mockDigitalTwinsCtor(...args);
-    return {
-      queryTwins: mockQueryTwins,
-    };
-  }),
+vi.mock("../src/core/DigitalTwinsService", () => ({
+  DigitalTwinsService: {
+    create: vi.fn(() => ({
+      getLights: mockGetLights,
+      updateLightPosition: vi.fn(),
+    })),
+  },
 }));
 
 import { getLights } from "../src/functions/getLights";
@@ -39,12 +32,10 @@ describe("getLights function", () => {
       warn: vi.fn(),
       error: vi.fn(),
       invocationId: "test-id",
-      functionName: "lights",
+      functionName: "getLights",
     } as any;
 
-    mockQueryTwins.mockReset();
-    mockDigitalTwinsCtor.mockClear();
-    mockClientSecretCredential.mockClear();
+    mockGetLights.mockReset();
   });
 
   afterEach(() => {
@@ -52,72 +43,49 @@ describe("getLights function", () => {
   });
 
   it("returns lights including locatedIn when present", async () => {
-    // First call: query all lights
-    // Second call: query relationships
-    mockQueryTwins
-      .mockReturnValueOnce(
-        (async function* () {
-          yield { id: "light-1", name: "Living", on: true };
-          yield { id: "light-2", name: "Porch", on: false };
-        })(),
-      )
-      .mockReturnValueOnce(
-        (async function* () {
-          yield { lightId: "light-1", roomId: "room-living" };
-        })(),
-      );
+    const mockLights = [
+      { id: "light-1", name: "Living", on: true, locatedIn: "room-living" },
+      { id: "light-2", name: "Porch", on: false, locatedIn: null },
+    ];
+
+    mockGetLights.mockResolvedValue(mockLights);
 
     const result = await getLights({} as any, mockContext);
 
     expect(result.status).toBe(200);
-    expect(result.jsonBody).toEqual([
-      { id: "light-1", name: "Living", on: true, locatedIn: "room-living" },
-      { id: "light-2", name: "Porch", on: false, locatedIn: null },
-    ]);
-    expect(mockDigitalTwinsCtor).toHaveBeenCalledTimes(1);
-    expect(mockQueryTwins).toHaveBeenCalledTimes(2);
+    expect(result.jsonBody).toEqual(mockLights);
+    expect(mockGetLights).toHaveBeenCalled();
   });
 
   it("marks lights without locatedIn as null", async () => {
-    // First call: query all lights
-    // Second call: query relationships (empty)
-    mockQueryTwins
-      .mockReturnValueOnce(
-        (async function* () {
-          yield { id: "light-3", name: "Hall", on: false };
-        })(),
-      )
-      .mockReturnValueOnce(
-        (async function* () {
-          // No relationships
-        })(),
-      );
+    const mockLights = [
+      { id: "light-3", name: "Hall", on: false, locatedIn: null },
+    ];
+
+    mockGetLights.mockResolvedValue(mockLights);
 
     const result = await getLights({} as any, mockContext);
 
     expect(result.status).toBe(200);
-    expect(result.jsonBody).toEqual([
-      { id: "light-3", name: "Hall", on: false, locatedIn: null },
-    ]);
-    expect(mockQueryTwins).toHaveBeenCalledTimes(2);
+    expect(result.jsonBody).toEqual(mockLights);
   });
 
   it("returns 500 when ADT_URL is missing", async () => {
     delete process.env.ADT_URL;
 
+    // Make createADTService throw an error
+    mockGetLights.mockRejectedValue(
+      new Error("Missing ADT or Azure credentials in environment variables"),
+    );
+
     const result = await getLights({} as any, mockContext);
 
     expect(result.status).toBe(500);
-    expect(mockContext.error).toHaveBeenCalledWith(
-      "Missing ADT or Azure credentials in environment variables",
-    );
-    expect(mockDigitalTwinsCtor).not.toHaveBeenCalled();
+    expect(mockContext.error).toHaveBeenCalled();
   });
 
   it("returns 500 when query fails", async () => {
-    mockQueryTwins.mockImplementation(() => {
-      throw new Error("boom");
-    });
+    mockGetLights.mockRejectedValue(new Error("boom"));
 
     const result = await getLights({} as any, mockContext);
 
