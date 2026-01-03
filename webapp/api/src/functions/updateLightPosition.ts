@@ -20,9 +20,10 @@ export async function updateLightPosition(
     }
 
     const body = await request.json();
-    const { positionX, positionY } = body as {
+    const { positionX, positionY, locatedIn } = body as {
       positionX?: number;
       positionY?: number;
+      locatedIn?: string;
     };
 
     if (
@@ -40,11 +41,11 @@ export async function updateLightPosition(
     }
 
     const service = DigitalTwinsService.create(context);
-    await service.updateLightPosition(lightId, positionX, positionY);
+    await service.updateLightPosition(lightId, positionX, positionY, locatedIn);
 
     return {
       status: 200,
-      jsonBody: { success: true, positionX, positionY },
+      jsonBody: { success: true, positionX, positionY, locatedIn },
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

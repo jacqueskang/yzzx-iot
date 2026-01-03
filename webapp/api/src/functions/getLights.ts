@@ -35,7 +35,7 @@ export async function getLights(
   }
 }
 
-app.http("getLights", {
+app.http("lights", {
   methods: ["GET"],
   authLevel: "anonymous",
   handler: getLights,

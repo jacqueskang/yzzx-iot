@@ -43,9 +43,10 @@ let map: L.Map | null = null;
 const lights = ref<HueLight[]>([]);
 const markers = new Map<string, L.Marker>();
 const roomPositions = ref<Record<string, [number, number]>>({});
+const roomPolygons = ref<Record<string, Array<[number, number]>>>({});
 
-// Parse SVG to extract room center positions
-async function loadRoomPositions() {
+// Parse SVG to extract room polygons and center positions
+async function loadRoomData() {
   try {
     const response = await fetch("/floorplan.svg");
     const svgText = await response.text();
@@ -58,26 +59,218 @@ async function loadRoomPositions() {
     document.body.appendChild(container);
 
     const positions: Record<string, [number, number]> = {};
+    const polygons: Record<string, Array<[number, number]>> = {};
     const roomGroups = container.querySelectorAll('[id^="room-"]');
 
     roomGroups.forEach((group) => {
-      const bbox = (group as SVGGraphicsElement).getBBox();
-      if (bbox.width > 0 && bbox.height > 0) {
-        const centerY = bbox.y + bbox.height / 2;
-        const centerX = bbox.x + bbox.width / 2;
-        positions[group.id] = [centerY, centerX];
+      const roomId = group.id;
+
+      // Extract polygon points from child polygon or path elements
+      const polygon = group.querySelector("polygon");
+      const path = group.querySelector("path");
+
+      if (polygon) {
+        const pointsAttr = polygon.getAttribute("points");
+        if (pointsAttr) {
+          // Parse "x1,y1 x2,y2 ..." format
+          let points = pointsAttr
+            .trim()
+            .split(/\s+/)
+            .map((pair) => {
+              const [x, y] = pair.split(",").map(Number);
+              return [x, y] as [number, number];
+            });
+          // Apply group transform if present
+          const transform = group.getAttribute("transform");
+          if (transform) {
+            points = applyTransform(points, transform);
+          }
+          if (points.length > 0) {
+            polygons[roomId] = points;
+          }
+        }
+      } else if (path) {
+        // For SVG paths, extract all coordinate points from d attribute
+        const pathData = path.getAttribute("d");
+        if (pathData) {
+          let points = extractPointsFromPath(pathData);
+          // Apply group transform if present
+          const transform = group.getAttribute("transform");
+          if (transform) {
+            points = applyTransform(points, transform);
+          }
+          if (points.length > 0) {
+            polygons[roomId] = points;
+          }
+        }
+      }
+
+      // Also store center position for fallback
+      try {
+        const bbox = (group as SVGGraphicsElement).getBBox();
+        if (bbox && bbox.width > 0 && bbox.height > 0) {
+          const centerY = bbox.y + bbox.height / 2;
+          const centerX = bbox.x + bbox.width / 2;
+          positions[roomId] = [centerY, centerX];
+        }
+      } catch (e) {
+        // getBBox may not work in test environment, skip position calculation
       }
     });
 
     document.body.removeChild(container);
     roomPositions.value = positions;
+    roomPolygons.value = polygons;
     console.log(
-      `Loaded ${Object.keys(positions).length} room positions:`,
-      positions,
+      `Loaded ${Object.keys(positions).length} rooms with ${
+        Object.keys(polygons).length
+      } polygons`,
     );
   } catch (error) {
-    console.error("Error loading room positions from SVG:", error);
+    console.error("Error loading room data from SVG:", error);
   }
+}
+
+// Apply SVG transform (translate, rotate, scale) to points
+function applyTransform(
+  points: Array<[number, number]>,
+  transform: string,
+): Array<[number, number]> {
+  // Match transform functions: translate(x,y), rotate(angle,cx,cy), scale(x,y), etc.
+  const translateMatch = transform.match(
+    /translate\s*\(\s*([-\d.]+)\s*,?\s*([-\d.]*)\s*\)/,
+  );
+  const rotateMatch = transform.match(
+    /rotate\s*\(\s*([-\d.]+)\s*,?\s*([-\d.]*)\s*,?\s*([-\d.]*)\s*\)/,
+  );
+  const scaleMatch = transform.match(
+    /scale\s*\(\s*([-\d.]+)\s*,?\s*([-\d.]*)\s*\)/,
+  );
+
+  return points.map(([x, y]) => {
+    let newX = x;
+    let newY = y;
+
+    // Apply scale first (if present)
+    if (scaleMatch) {
+      const scaleX = Number(scaleMatch[1]) || 1;
+      const scaleY = Number(scaleMatch[2]) || scaleX;
+      newX *= scaleX;
+      newY *= scaleY;
+    }
+
+    // Apply rotate (if present) - for simplicity, only handling rotation around origin
+    if (rotateMatch) {
+      const angle = (Number(rotateMatch[1]) * Math.PI) / 180;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const tempX = newX * cos - newY * sin;
+      const tempY = newX * sin + newY * cos;
+      newX = tempX;
+      newY = tempY;
+    }
+
+    // Apply translate last
+    if (translateMatch) {
+      const tx = Number(translateMatch[1]) || 0;
+      const ty = Number(translateMatch[2]) || 0;
+      newX += tx;
+      newY += ty;
+    }
+
+    return [newX, newY] as [number, number];
+  });
+}
+
+// Extract coordinate points from SVG path d attribute by parsing SVG commands
+function extractPointsFromPath(pathData: string): Array<[number, number]> {
+  const points: Array<[number, number]> = [];
+  let currentX = 0;
+  let currentY = 0;
+
+  // Parse SVG path commands: M/m (move), L/l (line), H/h (horizontal), V/v (vertical), Z/z (close)
+  const commandRegex = /([MmLlHhVvZz])|(-?\d+\.?\d*)/g;
+  let match;
+  let currentCommand = "";
+  const numbers: number[] = [];
+
+  while ((match = commandRegex.exec(pathData)) !== null) {
+    if (match[1]) {
+      // It's a command letter
+      currentCommand = match[1];
+      // Process accumulated numbers with previous command
+      if (currentCommand !== "Z" && currentCommand !== "z") {
+        // Continue accumulating for next numbers
+      }
+    } else if (match[2]) {
+      // It's a number
+      numbers.push(Number(match[2]));
+
+      // Process based on command
+      if (currentCommand === "M" || currentCommand === "m") {
+        // Move command - takes x, y
+        if (numbers.length === 2) {
+          if (currentCommand === "M") {
+            currentX = numbers[0];
+            currentY = numbers[1];
+          } else {
+            currentX += numbers[0];
+            currentY += numbers[1];
+          }
+          points.push([currentX, currentY]);
+          numbers.length = 0;
+        }
+      } else if (currentCommand === "L" || currentCommand === "l") {
+        // Line command - takes x, y
+        if (numbers.length === 2) {
+          if (currentCommand === "L") {
+            currentX = numbers[0];
+            currentY = numbers[1];
+          } else {
+            currentX += numbers[0];
+            currentY += numbers[1];
+          }
+          points.push([currentX, currentY]);
+          numbers.length = 0;
+        }
+      } else if (currentCommand === "H") {
+        // Absolute horizontal line - takes x
+        if (numbers.length === 1) {
+          currentX = numbers[0];
+          points.push([currentX, currentY]);
+          numbers.length = 0;
+        }
+      } else if (currentCommand === "h") {
+        // Relative horizontal line - takes dx
+        if (numbers.length === 1) {
+          currentX += numbers[0];
+          points.push([currentX, currentY]);
+          numbers.length = 0;
+        }
+      } else if (currentCommand === "V") {
+        // Absolute vertical line - takes y
+        if (numbers.length === 1) {
+          currentY = numbers[0];
+          points.push([currentX, currentY]);
+          numbers.length = 0;
+        }
+      } else if (currentCommand === "v") {
+        // Relative vertical line - takes dy
+        if (numbers.length === 1) {
+          currentY += numbers[0];
+          points.push([currentX, currentY]);
+          numbers.length = 0;
+        }
+      }
+    }
+  }
+
+  // Handle close path (Z/z) - return to start
+  if (pathData.includes("Z") || pathData.includes("z") || points.length > 0) {
+    // Path is already closed in the points, no need to add start point again
+  }
+
+  return points;
 }
 
 const unplacedLights = computed(() => {
@@ -86,6 +279,78 @@ const unplacedLights = computed(() => {
     return !light.positionX && !light.positionY && !light.locatedIn;
   });
 });
+
+// Ray casting algorithm to check if point is inside polygon
+function pointInPolygon(
+  point: [number, number],
+  polygon: Array<[number, number]>,
+): boolean {
+  const [x, y] = point;
+  let inside = false;
+
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i];
+    const [xj, yj] = polygon[j];
+
+    const intersect =
+      yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+
+  return inside;
+}
+
+// Determine which room a position belongs to using polygon detection
+function getRoomAtPosition(posX: number, posY: number): string | null {
+  // Convert Leaflet coordinates [lat, lng] to SVG coordinates [x, y] with Y inversion
+  const SVG_HEIGHT = 679;
+  const x = posX;
+  const y = SVG_HEIGHT - posY;
+  const point: [number, number] = [x, y];
+
+  // Check each room's polygon
+  for (const [roomId, polygon] of Object.entries(roomPolygons.value)) {
+    if (polygon && pointInPolygon(point, polygon)) {
+      return roomId;
+    }
+  }
+
+  return null;
+}
+
+// Draw room polygons on the map for visualization/debugging
+function drawRoomPolygons() {
+  if (!map) return;
+
+  // Create a feature group for polygons so they can be toggled/removed easily
+  Object.entries(roomPolygons.value).forEach(([roomId, polygon]) => {
+    if (polygon && polygon.length > 0) {
+      // Convert [x, y] to Leaflet [lat, lng] format with inverted Y
+      const SVG_HEIGHT = 679;
+      const latLngs = polygon.map(
+        ([x, y]) => [SVG_HEIGHT - y, x] as [number, number],
+      );
+
+      const leafletPolygon = L.polygon(latLngs, {
+        color: "#0066cc",
+        weight: 2,
+        opacity: 0.6,
+        fillColor: "#0066cc",
+        fillOpacity: 0.1,
+      })
+        .bindPopup(roomId.replace("room-", ""))
+        .addTo(map);
+
+      // Log polygon bounds for debugging
+      const bounds = leafletPolygon.getBounds();
+      console.log(`Polygon ${roomId}: ${JSON.stringify(bounds)}`);
+    }
+  });
+
+  console.log(
+    `Drew ${Object.keys(roomPolygons.value).length} room polygons on map`,
+  );
+}
 
 function getPosition(light: HueLight): [number, number] | null {
   // Priority 1: Use explicit position if available
@@ -134,15 +399,51 @@ function createMarker(light: HueLight): L.Marker | null {
     const newPositionY = newLatLng.lat;
 
     const originalPosition = position;
+    const originalRoom = light.locatedIn;
+    const newRoom = getRoomAtPosition(newPositionX, newPositionY);
 
     try {
+      // Check if room changed
+      if (newRoom && newRoom !== originalRoom) {
+        // Extract room name from room ID (e.g., "room-living" -> "Living")
+        const newRoomName =
+          newRoom.replace("room-", "").charAt(0).toUpperCase() +
+          newRoom.slice(6);
+        const oldRoomName = originalRoom
+          ? originalRoom.replace("room-", "").charAt(0).toUpperCase() +
+            originalRoom.slice(6)
+          : "Unplaced";
+
+        // Prompt user for confirmation
+        const confirmed = confirm(
+          `Move ${light.name} from ${oldRoomName} to ${newRoomName}?`,
+        );
+
+        if (!confirmed) {
+          // Revert marker to original position
+          marker.setLatLng(originalPosition);
+          return;
+        }
+      }
+
+      // Update position and optionally room
+      const patchBody: {
+        positionX: number;
+        positionY: number;
+        locatedIn?: string;
+      } = {
+        positionX: newPositionX,
+        positionY: newPositionY,
+      };
+
+      if (newRoom && newRoom !== originalRoom) {
+        patchBody.locatedIn = newRoom;
+      }
+
       const response = await fetch(`/api/lights/${light.id}/position`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          positionX: newPositionX,
-          positionY: newPositionY,
-        }),
+        body: JSON.stringify(patchBody),
       });
 
       if (!response.ok) {
@@ -154,10 +455,17 @@ function createMarker(light: HueLight): L.Marker | null {
       if (lightIndex !== -1) {
         lights.value[lightIndex].positionX = newPositionX;
         lights.value[lightIndex].positionY = newPositionY;
+        if (newRoom && newRoom !== originalRoom) {
+          lights.value[lightIndex].locatedIn = newRoom;
+        }
       }
 
       console.log(
-        `Updated position for ${light.name} to (${newPositionX}, ${newPositionY})`,
+        `Updated position for ${
+          light.name
+        } to (${newPositionX}, ${newPositionY})${
+          newRoom && newRoom !== originalRoom ? ` in room ${newRoom}` : ""
+        }`,
       );
     } catch (error) {
       console.error("Failed to update light position:", error);
@@ -223,8 +531,8 @@ async function fetchLights() {
 onMounted(async () => {
   if (!mapContainer.value) return;
 
-  // Load room positions from SVG first
-  await loadRoomPositions();
+  // Load room data (polygons and positions) from SVG first
+  await loadRoomData();
 
   // Create Leaflet map with image overlay
   const bounds: L.LatLngBoundsExpression = [
@@ -244,6 +552,9 @@ onMounted(async () => {
 
   // Fit the map to the image bounds
   map.fitBounds(bounds);
+
+  // Draw room polygons on the map for visualization
+  drawRoomPolygons();
 
   // Fetch lights and create markers
   await fetchLights();

@@ -89,13 +89,20 @@ export class DigitalTwinsService {
     lightId: string,
     positionX: number,
     positionY: number,
+    locatedIn?: string,
   ): Promise<void> {
     this.context.info(
-      `Updating position for light ${lightId} to (${positionX}, ${positionY})`,
+      `Updating position for light ${lightId} to (${positionX}, ${positionY})${
+        locatedIn ? ` in room ${locatedIn}` : ""
+      }`,
     );
 
-    // Use "add" operation which works for both new and existing properties
-    const patch = [
+    // Update position properties
+    const patch: Array<{
+      op: "add";
+      path: string;
+      value: number;
+    }> = [
       {
         op: "add",
         path: "/positionX",
@@ -109,6 +116,45 @@ export class DigitalTwinsService {
     ];
 
     await this.client.updateDigitalTwin(lightId, patch);
+
+    // Handle room relationship if provided
+    if (locatedIn) {
+      // First, delete the existing locatedIn relationship if it exists
+      try {
+        const relationships = this.client.listRelationships(lightId);
+        for await (const rel of relationships) {
+          // Only delete locatedIn relationships
+          if (rel.$relationshipName === "locatedIn") {
+            await this.client.deleteRelationship(lightId, rel.$relationshipId);
+            this.context.info(
+              `Deleted existing locatedIn relationship: ${rel.$relationshipId}`,
+            );
+          }
+        }
+      } catch (error) {
+        // If there are no existing relationships, that's fine
+        this.context.info("No existing locatedIn relationship to delete");
+      }
+
+      // Create new relationship to the room
+      const relationshipId = `${lightId}_locatedIn_${locatedIn}`;
+      try {
+        await this.client.upsertRelationship(lightId, relationshipId, {
+          $relationshipName: "locatedIn",
+          $targetId: locatedIn,
+        });
+        this.context.info(
+          `Created relationship from ${lightId} to ${locatedIn}`,
+        );
+      } catch (error) {
+        this.context.warn(
+          `Failed to create relationship: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+    }
+
     this.context.info(`Successfully updated position for light ${lightId}`);
   }
 }
