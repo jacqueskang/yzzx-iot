@@ -6,7 +6,7 @@ import {
 } from "@azure/functions";
 import { DigitalTwinsService } from "../core/DigitalTwinsService";
 
-export async function updateLightPosition(
+export async function updateLocation(
   request: HttpRequest,
   context: InvocationContext,
 ): Promise<HttpResponseInit> {
@@ -66,9 +66,9 @@ export async function updateLightPosition(
   }
 }
 
-app.http("updateLightPosition", {
+app.http("updateLocation", {
   methods: ["PATCH"],
-  route: "lights/{id}/position",
+  route: "lights/{id}/location",
   authLevel: "anonymous",
-  handler: updateLightPosition,
+  handler: updateLocation,
 });

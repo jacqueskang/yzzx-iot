@@ -437,7 +437,7 @@ function createMarker(light: HueLight): L.Marker | null {
         patchBody.locatedIn = newRoom;
       }
 
-      const response = await fetch(`/api/lights/${light.id}/position`, {
+      const response = await fetch(`/api/lights/${light.id}/location`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patchBody),
