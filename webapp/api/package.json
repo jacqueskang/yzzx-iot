@@ -26,5 +26,5 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "main": "dist/{index.js,functions/*.js}"
+  "main": "dist/src/{index.js,functions/*.js}"
 }
