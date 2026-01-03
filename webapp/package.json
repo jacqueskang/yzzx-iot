@@ -2,6 +2,7 @@
   "name": "yzzx-frontend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "swa start http://localhost:5173 --api-location ./api --run \"npm run dev:client\"",
     "dev:client": "vite",
