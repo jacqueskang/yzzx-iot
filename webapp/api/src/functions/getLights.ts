@@ -16,7 +16,7 @@ export interface HueLight {
   locatedIn: string | null;
 }
 
-export async function lights(
+export async function getLights(
   request: HttpRequest,
   context: InvocationContext,
 ): Promise<HttpResponseInit> {
@@ -110,8 +110,8 @@ export async function lights(
   }
 }
 
-app.http("lights", {
+app.http("getLights", {
   methods: ["GET"],
   authLevel: "anonymous",
-  handler: lights,
+  handler: getLights,
 });
