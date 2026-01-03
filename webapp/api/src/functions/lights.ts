@@ -7,7 +7,7 @@ import {
 import { ClientSecretCredential } from "@azure/identity";
 import { DigitalTwinsClient } from "@azure/digital-twins-core";
 
-interface HueLight {
+export interface HueLight {
   id: string;
   name: string;
   on: boolean;
