@@ -11,7 +11,9 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
-    "@azure/functions": "^4.10.0"
+    "@azure/digital-twins-core": "^1.1.0",
+    "@azure/functions": "^4.10.0",
+    "@azure/identity": "^4.13.0"
   },
   "devDependencies": {
     "@types/node": "^20.x",

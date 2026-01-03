@@ -25,6 +25,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 
+interface HueLight {
+  id: string;
+  name: string;
+  on: boolean;
+}
+
 interface Device {
   id: string;
   x: number;
@@ -32,10 +38,22 @@ interface Device {
   on: boolean;
 }
 
+const lights = ref<HueLight[]>([]);
 const devices = ref<Device[]>([]);
 
 onMounted(async () => {
-  // TODO: Fetch device status from API
+  try {
+    const response = await fetch("/api/lights");
+    if (!response.ok) {
+      throw new Error(`Failed to fetch lights: ${response.statusText}`);
+    }
+    lights.value = await response.json();
+    console.log(`Fetched ${lights.value.length} lights from API`);
+  } catch (error) {
+    console.error("Error fetching lights:", error);
+  }
+
+  // TODO: Map lights to devices with coordinates
   devices.value = [
     { id: "light1", x: 100, y: 200, on: true },
     { id: "sensor1", x: 400, y: 300, on: false },

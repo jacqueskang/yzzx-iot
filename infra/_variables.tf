@@ -44,3 +44,8 @@ variable "static_web_app_client_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "static_web_app_principal_id" {
+  description = "Object ID of the Azure AD Application (Service Principal) for Static Web App"
+  default     = "9fe361ff-b2a1-43ba-895a-ddc5f944e145"
+}
