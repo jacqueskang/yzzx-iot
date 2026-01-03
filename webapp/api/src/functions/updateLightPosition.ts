@@ -70,14 +70,15 @@ export async function updateLightPosition(
     );
 
     // Update the digital twin with new position
+    // Use "add" operation which works for both new and existing properties
     const patch = [
       {
-        op: "replace",
+        op: "add",
         path: "/positionX",
         value: positionX,
       },
       {
-        op: "replace",
+        op: "add",
         path: "/positionY",
         value: positionY,
       },
