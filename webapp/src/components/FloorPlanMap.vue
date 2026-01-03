@@ -1,37 +1,11 @@
 <template>
   <div class="d-flex vh-100 bg-light">
     <div ref="mapContainer" class="flex-grow-1"></div>
-
-    <!-- Unplaced lights sidebar -->
-    <div
-      v-if="unplacedLights.length > 0"
-      class="bg-white border-start"
-      style="width: 200px; overflow-y: auto"
-    >
-      <div class="p-3">
-        <h6 class="mb-3">Unplaced Lights</h6>
-        <div
-          v-for="light in unplacedLights"
-          :key="light.id"
-          class="d-flex align-items-center gap-2 p-2 mb-2 bg-light rounded"
-        >
-          <i
-            :class="[
-              'bi',
-              light.on
-                ? 'bi-lightbulb-fill text-warning'
-                : 'bi-lightbulb text-secondary',
-            ]"
-          ></i>
-          <span class="small">{{ light.name }}</span>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -44,6 +18,7 @@ const lights = ref<HueLight[]>([]);
 const markers = new Map<string, L.Marker>();
 const roomPositions = ref<Record<string, [number, number]>>({});
 const roomPolygons = ref<Record<string, Array<[number, number]>>>({});
+const unplacedLightPositions = ref<Record<string, [number, number]>>({}); // Track individual positions for unplaced lights
 
 // Parse SVG to extract room polygons and center positions
 async function loadRoomData() {
@@ -273,13 +248,6 @@ function extractPointsFromPath(pathData: string): Array<[number, number]> {
   return points;
 }
 
-const unplacedLights = computed(() => {
-  return lights.value.filter((light) => {
-    // Light is unplaced if it has no position AND no room
-    return !light.positionX && !light.positionY && !light.locatedIn;
-  });
-});
-
 // Ray casting algorithm to check if point is inside polygon
 function pointInPolygon(
   point: [number, number],
@@ -361,6 +329,35 @@ function getPosition(light: HueLight): [number, number] | null {
   // Priority 2: Fall back to room center
   if (light.locatedIn && roomPositions.value[light.locatedIn]) {
     return roomPositions.value[light.locatedIn];
+  }
+
+  // Priority 3: Check if unplaced light has a stored position in the unplaced zone
+  if (unplacedLightPositions.value[light.id]) {
+    return unplacedLightPositions.value[light.id];
+  }
+
+  // Priority 4: Return default unplaced position (upper right corner zone)
+  const isUnplaced =
+    light.positionX === undefined &&
+    light.positionY === undefined &&
+    !light.locatedIn;
+
+  if (isUnplaced) {
+    const unplacedLights = lights.value.filter(
+      (l) =>
+        l.positionX === undefined && l.positionY === undefined && !l.locatedIn,
+    );
+    const indexInUnplaced = unplacedLights.findIndex((l) => l.id === light.id);
+    if (indexInUnplaced >= 0) {
+      // Create a grid in upper right corner (900-950, 20-100)
+      const cols = 5;
+      const row = Math.floor(indexInUnplaced / cols);
+      const col = indexInUnplaced % cols;
+      const x = 900 + col * 12;
+      const y = 20 + row * 20;
+      unplacedLightPositions.value[light.id] = [y, x];
+      return [y, x];
+    }
   }
 
   // No position available
@@ -457,6 +454,10 @@ function createMarker(light: HueLight): L.Marker | null {
         lights.value[lightIndex].positionY = newPositionY;
         if (newRoom && newRoom !== originalRoom) {
           lights.value[lightIndex].locatedIn = newRoom;
+        }
+        // Clear unplaced position once the light is placed
+        if (originalRoom === null || originalRoom === undefined) {
+          delete unplacedLightPositions.value[light.id];
         }
       }
 
