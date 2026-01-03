@@ -43,7 +43,7 @@ export async function lights(
 
     const client = new DigitalTwinsClient(adtUrl, credential);
 
-    // Query for HueLight twins with id, name, and on properties
+    context.info(`Connecting to ADT at ${adtUrl}`);
     const query = `SELECT t.$dtId as id, t.name as name, t.on as on FROM digitaltwins t WHERE IS_OF_MODEL(t, 'dtmi:com:yzzx:HueLight;1')`;
 
     const lights: HueLight[] = [];
@@ -55,14 +55,20 @@ export async function lights(
       });
     }
 
-    context.log(`Retrieved ${lights.length} Hue lights from ADT`);
+    context.info(`Retrieved ${lights.length} Hue lights from ADT`);
 
     return {
       status: 200,
       jsonBody: lights,
     };
   } catch (error) {
-    context.error(`Failed to retrieve lights: ${error}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const statusCode = (error as any)?.statusCode || (error as any)?.code;
+    context.error(`Failed to retrieve lights: ${errorMessage}`, {
+      statusCode,
+      error: String(error),
+    });
     return {
       status: 500,
       body: JSON.stringify({ error: "Failed to retrieve lights" }),
