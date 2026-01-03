@@ -1,6 +1,6 @@
 import { app } from "@azure/functions";
 import "./functions/getLights";
-import "./functions/updateLightPosition";
+import "./functions/updateLightLocation";
 
 app.setup({
   enableHttpStream: true,
