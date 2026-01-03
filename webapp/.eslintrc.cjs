@@ -20,5 +20,12 @@ module.exports = {
       files: ["*.ts", "*.tsx"],
       rules: {},
     },
+    {
+      files: ["**/*.test.ts", "**/*.test.tsx", "tests/**/*.ts"],
+      rules: {
+        "@typescript-eslint/no-explicit-any": "off",
+        "require-yield": "off",
+      },
+    },
   ],
 };

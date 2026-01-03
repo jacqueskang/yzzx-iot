@@ -23,7 +23,7 @@ describe("lights function", () => {
       error: vi.fn(),
       invocationId: "test-id",
       functionName: "lights",
-    } as unknown as InvocationContext;
+    } as any;
   });
 
   afterEach(() => {
@@ -54,19 +54,11 @@ describe("lights function", () => {
     };
 
     vi.mocked(DigitalTwinsClient).mockImplementation(
-      () =>
-        mockClientInstance as unknown as InstanceType<
-          typeof DigitalTwinsClient
-        >,
+      () => mockClientInstance as any,
     );
-    vi.mocked(ClientSecretCredential).mockImplementation(
-      () => ({}) as unknown as InstanceType<typeof ClientSecretCredential>,
-    );
+    vi.mocked(ClientSecretCredential).mockImplementation(() => ({}) as any);
 
-    const result = await lights(
-      {} as unknown as Parameters<typeof lights>[0],
-      mockContext,
-    );
+    const result = await lights({} as any, mockContext);
 
     expect(result.status).toBe(200);
     expect(result.jsonBody).toEqual(mockLights);
@@ -78,10 +70,7 @@ describe("lights function", () => {
   it("should return 500 when ADT_URL is missing", async () => {
     delete process.env.ADT_URL;
 
-    const result = await lights(
-      {} as unknown as Parameters<typeof lights>[0],
-      mockContext,
-    );
+    const result = await lights({} as any, mockContext);
 
     expect(result.status).toBe(500);
     expect(mockContext.error).toHaveBeenCalledWith(
@@ -92,10 +81,7 @@ describe("lights function", () => {
   it("should return 500 when AZURE_TENANT_ID is missing", async () => {
     delete process.env.AZURE_TENANT_ID;
 
-    const result = await lights(
-      {} as unknown as Parameters<typeof lights>[0],
-      mockContext,
-    );
+    const result = await lights({} as any, mockContext);
 
     expect(result.status).toBe(500);
   });
@@ -103,10 +89,7 @@ describe("lights function", () => {
   it("should return 500 when AZURE_CLIENT_ID is missing", async () => {
     delete process.env.AZURE_CLIENT_ID;
 
-    const result = await lights(
-      {} as unknown as Parameters<typeof lights>[0],
-      mockContext,
-    );
+    const result = await lights({} as any, mockContext);
 
     expect(result.status).toBe(500);
   });
@@ -114,10 +97,7 @@ describe("lights function", () => {
   it("should return 500 when AZURE_CLIENT_SECRET is missing", async () => {
     delete process.env.AZURE_CLIENT_SECRET;
 
-    const result = await lights(
-      {} as unknown as Parameters<typeof lights>[0],
-      mockContext,
-    );
+    const result = await lights({} as any, mockContext);
 
     expect(result.status).toBe(500);
   });
@@ -128,8 +108,7 @@ describe("lights function", () => {
 
     const mockQueryTwins = vi.fn().mockReturnValue({
       [Symbol.asyncIterator]: async function* () {
-        // Empty iterator - intentionally empty
-        yield undefined;
+        // Empty iterator - no yields
       },
     });
 
@@ -138,19 +117,11 @@ describe("lights function", () => {
     };
 
     vi.mocked(DigitalTwinsClient).mockImplementation(
-      () =>
-        mockClientInstance as unknown as InstanceType<
-          typeof DigitalTwinsClient
-        >,
+      () => mockClientInstance as any,
     );
-    vi.mocked(ClientSecretCredential).mockImplementation(
-      () => ({}) as unknown as InstanceType<typeof ClientSecretCredential>,
-    );
+    vi.mocked(ClientSecretCredential).mockImplementation(() => ({}) as any);
 
-    const result = await lights(
-      {} as unknown as Parameters<typeof lights>[0],
-      mockContext,
-    );
+    const result = await lights({} as any, mockContext);
 
     expect(result.status).toBe(200);
     expect(result.jsonBody).toEqual([]);
@@ -163,7 +134,7 @@ describe("lights function", () => {
     const mockQueryTwins = vi.fn().mockImplementation(() => ({
       [Symbol.asyncIterator]: async function* () {
         throw new Error("ADT error");
-        yield undefined; // This line is unreachable but needed for generator function
+        yield undefined;
       },
     }));
 
@@ -172,19 +143,11 @@ describe("lights function", () => {
     };
 
     vi.mocked(DigitalTwinsClient).mockImplementation(
-      () =>
-        mockClientInstance as unknown as InstanceType<
-          typeof DigitalTwinsClient
-        >,
+      () => mockClientInstance as any,
     );
-    vi.mocked(ClientSecretCredential).mockImplementation(
-      () => ({}) as unknown as InstanceType<typeof ClientSecretCredential>,
-    );
+    vi.mocked(ClientSecretCredential).mockImplementation(() => ({}) as any);
 
-    const result = await lights(
-      {} as unknown as Parameters<typeof lights>[0],
-      mockContext,
-    );
+    const result = await lights({} as any, mockContext);
 
     expect(result.status).toBe(500);
     expect(mockContext.error).toHaveBeenCalled();
