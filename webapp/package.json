@@ -8,9 +8,9 @@
     "dev:client": "vite",
     "build:api": "cd api && npm install && npm run build",
     "build": "vite build && npm run build:api",
-    "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx,.vue",
-    "test": "vitest run",
+    "test": "vitest run && npm run test:api",
+    "test:api": "cd api && npm test",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
