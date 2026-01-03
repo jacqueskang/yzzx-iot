@@ -15,12 +15,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-
-interface HueLight {
-  id: string;
-  name: string;
-  on: boolean;
-}
+import type { HueLight } from "../../api/src/functions/lights";
 
 const lights = ref<HueLight[]>([]);
 
