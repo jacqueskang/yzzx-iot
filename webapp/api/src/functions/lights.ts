@@ -11,6 +11,8 @@ export interface HueLight {
   id: string;
   name: string;
   on: boolean;
+  positionX?: number;
+  positionY?: number;
   locatedIn: string | null;
 }
 
@@ -48,7 +50,7 @@ export async function lights(
 
     // First query: get all lights
     const lightsQuery =
-      "SELECT t.$dtId AS id, t.metadata.name AS name, t.on AS on " +
+      "SELECT t.$dtId AS id, t.metadata.name AS name, t.on AS on, t.positionX AS positionX, t.positionY AS positionY " +
       "FROM digitaltwins t " +
       "WHERE IS_OF_MODEL(t, 'dtmi:com:yzzx:HueLight;1')";
 
@@ -61,6 +63,8 @@ export async function lights(
         id: result.id,
         name: result.name || "",
         on: Boolean(result.on),
+        positionX: result.positionX ?? undefined,
+        positionY: result.positionY ?? undefined,
         locatedIn: null,
       });
     }

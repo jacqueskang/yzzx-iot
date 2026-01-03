@@ -56,16 +56,34 @@ const roomPositions: Record<string, [number, number]> = {
 };
 
 const unplacedLights = computed(() => {
-  return lights.value.filter((light) => !light.locatedIn);
+  return lights.value.filter((light) => {
+    // Light is unplaced if it has no position AND no room
+    return !light.positionX && !light.positionY && !light.locatedIn;
+  });
 });
 
+function getPosition(light: HueLight): [number, number] | null {
+  // Priority 1: Use explicit position if available
+  if (light.positionX !== undefined && light.positionY !== undefined) {
+    return [light.positionY, light.positionX];
+  }
+
+  // Priority 2: Fall back to room center
+  if (light.locatedIn && roomPositions[light.locatedIn]) {
+    return roomPositions[light.locatedIn];
+  }
+
+  // No position available
+  return null;
+}
+
 function createMarker(light: HueLight): L.CircleMarker | null {
-  if (!light.locatedIn || !roomPositions[light.locatedIn]) {
+  const position = getPosition(light);
+  if (!position) {
     return null;
   }
 
-  const position = roomPositions[light.locatedIn];
-  const marker = L.circleMarker([position[0], position[1]], {
+  const marker = L.circleMarker(position, {
     radius: 8,
     fillColor: light.on ? "#ffeb3b" : "#9e9e9e",
     fillOpacity: light.on ? 1 : 0.6,
@@ -82,10 +100,12 @@ function updateMarkers() {
 
   lights.value.forEach((light) => {
     const existingMarker = markers.get(light.id);
+    const position = getPosition(light);
 
-    if (light.locatedIn && roomPositions[light.locatedIn]) {
+    if (position) {
       if (existingMarker) {
-        // Update existing marker
+        // Update existing marker position and style
+        existingMarker.setLatLng(position);
         existingMarker.setStyle({
           fillColor: light.on ? "#ffeb3b" : "#9e9e9e",
           fillOpacity: light.on ? 1 : 0.6,
