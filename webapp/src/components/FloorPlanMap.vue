@@ -41,7 +41,7 @@ import type { HueLight } from "../../api/src/functions/lights";
 const mapContainer = ref<HTMLDivElement | null>(null);
 let map: L.Map | null = null;
 const lights = ref<HueLight[]>([]);
-const markers = new Map<string, L.CircleMarker>();
+const markers = new Map<string, L.Marker>();
 const roomPositions = ref<Record<string, [number, number]>>({});
 
 // Parse SVG to extract room center positions
@@ -102,21 +102,71 @@ function getPosition(light: HueLight): [number, number] | null {
   return null;
 }
 
-function createMarker(light: HueLight): L.CircleMarker | null {
+function createMarker(light: HueLight): L.Marker | null {
   const position = getPosition(light);
   if (!position) {
     return null;
   }
 
-  const marker = L.circleMarker(position, {
-    radius: 8,
-    fillColor: light.on ? "#ffeb3b" : "#9e9e9e",
-    fillOpacity: light.on ? 1 : 0.6,
-    color: "#333",
-    weight: 1,
+  const iconClass = light.on
+    ? "bi-lightbulb-fill text-warning"
+    : "bi-lightbulb text-secondary";
+
+  // Create icon using Bootstrap icons
+  const icon = L.divIcon({
+    className: "custom-light-marker",
+    html: `<i class="bi ${iconClass}" style="font-size: 20px; cursor: move;"></i>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 20],
+  });
+
+  const marker = L.marker(position, {
+    icon: icon,
+    draggable: true,
   });
 
   marker.bindTooltip(light.name, { permanent: false, direction: "top" });
+
+  // Handle drag end to update position in ADT
+  marker.on("dragend", async () => {
+    const newLatLng = marker.getLatLng();
+    const newPositionX = newLatLng.lng;
+    const newPositionY = newLatLng.lat;
+
+    const originalPosition = position;
+
+    try {
+      const response = await fetch(`/api/lights/${light.id}/position`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          positionX: newPositionX,
+          positionY: newPositionY,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update position: ${response.statusText}`);
+      }
+
+      // Update local state
+      const lightIndex = lights.value.findIndex((l) => l.id === light.id);
+      if (lightIndex !== -1) {
+        lights.value[lightIndex].positionX = newPositionX;
+        lights.value[lightIndex].positionY = newPositionY;
+      }
+
+      console.log(
+        `Updated position for ${light.name} to (${newPositionX}, ${newPositionY})`,
+      );
+    } catch (error) {
+      console.error("Failed to update light position:", error);
+      // Revert marker to original position
+      marker.setLatLng(originalPosition);
+      alert(`Failed to update position for ${light.name}. Please try again.`);
+    }
+  });
+
   return marker;
 }
 
@@ -129,12 +179,18 @@ function updateMarkers() {
 
     if (position) {
       if (existingMarker) {
-        // Update existing marker position and style
+        // Update existing marker position and icon
         existingMarker.setLatLng(position);
-        existingMarker.setStyle({
-          fillColor: light.on ? "#ffeb3b" : "#9e9e9e",
-          fillOpacity: light.on ? 1 : 0.6,
+        const iconClass = light.on
+          ? "bi-lightbulb-fill text-warning"
+          : "bi-lightbulb text-secondary";
+        const newIcon = L.divIcon({
+          className: "custom-light-marker",
+          html: `<i class="bi ${iconClass}" style="font-size: 20px; cursor: move;"></i>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 20],
         });
+        existingMarker.setIcon(newIcon);
       } else {
         // Create new marker
         const marker = createMarker(light);
