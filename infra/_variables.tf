@@ -33,3 +33,14 @@ variable "rooms" {
     { id = "room-living-room", name = "客厅" }
   ]
 }
+
+variable "static_web_app_client_id" {
+  description = "Azure AD Application (Client) ID for Static Web App authentication"
+  default     = "70540f47-4abb-410d-a970-08d5ddeec1af"
+}
+
+variable "static_web_app_client_secret" {
+  description = "Azure AD Application Client Secret for Static Web App authentication"
+  type        = string
+  sensitive   = true
+}
