@@ -1,5 +1,5 @@
 import { app } from "@azure/functions";
-import "./functions/lights";
+import "./functions/getLights";
 import "./functions/updateLightPosition";
 
 app.setup({

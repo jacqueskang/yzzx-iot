@@ -20,9 +20,9 @@ vi.mock("@azure/digital-twins-core", () => ({
   }),
 }));
 
-import { lights } from "../src/functions/lights";
+import { getLights } from "../src/functions/getLights";
 
-describe("lights function", () => {
+describe("getLights function", () => {
   let mockContext: InvocationContext;
   let originalEnv: NodeJS.ProcessEnv;
 
@@ -67,7 +67,7 @@ describe("lights function", () => {
         })(),
       );
 
-    const result = await lights({} as any, mockContext);
+    const result = await getLights({} as any, mockContext);
 
     expect(result.status).toBe(200);
     expect(result.jsonBody).toEqual([
@@ -93,7 +93,7 @@ describe("lights function", () => {
         })(),
       );
 
-    const result = await lights({} as any, mockContext);
+    const result = await getLights({} as any, mockContext);
 
     expect(result.status).toBe(200);
     expect(result.jsonBody).toEqual([
@@ -105,7 +105,7 @@ describe("lights function", () => {
   it("returns 500 when ADT_URL is missing", async () => {
     delete process.env.ADT_URL;
 
-    const result = await lights({} as any, mockContext);
+    const result = await getLights({} as any, mockContext);
 
     expect(result.status).toBe(500);
     expect(mockContext.error).toHaveBeenCalledWith(
@@ -119,7 +119,7 @@ describe("lights function", () => {
       throw new Error("boom");
     });
 
-    const result = await lights({} as any, mockContext);
+    const result = await getLights({} as any, mockContext);
 
     expect(result.status).toBe(500);
     expect(mockContext.error).toHaveBeenCalled();
