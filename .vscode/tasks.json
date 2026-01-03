@@ -48,7 +48,7 @@
 		{
 			"type": "shell",
 			"label": "npm prune (functions)",
-			"command": "npm prune --production",
+			"command": "npm prune --omit=dev",
 			"dependsOn": "npm build (functions)",
 			"problemMatcher": [],
 			"options": {
