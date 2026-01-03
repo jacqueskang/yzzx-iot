@@ -42,18 +42,43 @@ const mapContainer = ref<HTMLDivElement | null>(null);
 let map: L.Map | null = null;
 const lights = ref<HueLight[]>([]);
 const markers = new Map<string, L.CircleMarker>();
+const roomPositions = ref<Record<string, [number, number]>>({});
 
-// Room center positions (you can adjust these based on your SVG)
-const roomPositions: Record<string, [number, number]> = {
-  "room-bedroom": [466, 602],
-  "room-bathroom": [488, 512],
-  "room-wc": [488, 382],
-  "room-kitchen": [401, 382],
-  "room-office": [233, 567],
-  "room-guest-room": [163, 567],
-  "room-entryway": [328, 382],
-  "room-living-room": [330, 567],
-};
+// Parse SVG to extract room center positions
+async function loadRoomPositions() {
+  try {
+    const response = await fetch("/floorplan.svg");
+    const svgText = await response.text();
+
+    // Create temporary container to render SVG for accurate bbox calculations
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.visibility = "hidden";
+    container.innerHTML = svgText;
+    document.body.appendChild(container);
+
+    const positions: Record<string, [number, number]> = {};
+    const roomGroups = container.querySelectorAll('[id^="room-"]');
+
+    roomGroups.forEach((group) => {
+      const bbox = (group as SVGGraphicsElement).getBBox();
+      if (bbox.width > 0 && bbox.height > 0) {
+        const centerY = bbox.y + bbox.height / 2;
+        const centerX = bbox.x + bbox.width / 2;
+        positions[group.id] = [centerY, centerX];
+      }
+    });
+
+    document.body.removeChild(container);
+    roomPositions.value = positions;
+    console.log(
+      `Loaded ${Object.keys(positions).length} room positions:`,
+      positions,
+    );
+  } catch (error) {
+    console.error("Error loading room positions from SVG:", error);
+  }
+}
 
 const unplacedLights = computed(() => {
   return lights.value.filter((light) => {
@@ -69,8 +94,8 @@ function getPosition(light: HueLight): [number, number] | null {
   }
 
   // Priority 2: Fall back to room center
-  if (light.locatedIn && roomPositions[light.locatedIn]) {
-    return roomPositions[light.locatedIn];
+  if (light.locatedIn && roomPositions.value[light.locatedIn]) {
+    return roomPositions.value[light.locatedIn];
   }
 
   // No position available
@@ -141,6 +166,9 @@ async function fetchLights() {
 
 onMounted(async () => {
   if (!mapContainer.value) return;
+
+  // Load room positions from SVG first
+  await loadRoomPositions();
 
   // Create Leaflet map with image overlay
   const bounds: L.LatLngBoundsExpression = [
