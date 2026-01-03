@@ -4,8 +4,7 @@ import {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
-import { ClientSecretCredential } from "@azure/identity";
-import { DigitalTwinsClient } from "@azure/digital-twins-core";
+import { DigitalTwinsService } from "../core/DigitalTwinsService";
 
 export async function updateLightPosition(
   request: HttpRequest,
@@ -40,53 +39,8 @@ export async function updateLightPosition(
       };
     }
 
-    const adtUrl = process.env.ADT_URL;
-    const tenantId = process.env.AZURE_TENANT_ID;
-    const clientId = process.env.AZURE_CLIENT_ID;
-    const clientSecret = process.env.AZURE_CLIENT_SECRET;
-
-    if (!adtUrl || !tenantId || !clientId || !clientSecret) {
-      context.error(
-        "Missing ADT or Azure credentials in environment variables",
-      );
-      return {
-        status: 500,
-        body: JSON.stringify({
-          error: "ADT or Azure credentials not configured",
-        }),
-      };
-    }
-
-    const credential = new ClientSecretCredential(
-      tenantId,
-      clientId,
-      clientSecret,
-    );
-
-    const client = new DigitalTwinsClient(adtUrl, credential);
-
-    context.info(
-      `Updating position for light ${lightId} to (${positionX}, ${positionY})`,
-    );
-
-    // Update the digital twin with new position
-    // Use "add" operation which works for both new and existing properties
-    const patch = [
-      {
-        op: "add",
-        path: "/positionX",
-        value: positionX,
-      },
-      {
-        op: "add",
-        path: "/positionY",
-        value: positionY,
-      },
-    ];
-
-    await client.updateDigitalTwin(lightId, patch);
-
-    context.info(`Successfully updated position for light ${lightId}`);
+    const service = DigitalTwinsService.create(context);
+    await service.updateLightPosition(lightId, positionX, positionY);
 
     return {
       status: 200,

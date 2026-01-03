@@ -36,7 +36,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import type { HueLight } from "../../api/src/functions/getLights";
+import type { HueLight } from "../../api/src/models/HueLight";
 
 const mapContainer = ref<HTMLDivElement | null>(null);
 let map: L.Map | null = null;
