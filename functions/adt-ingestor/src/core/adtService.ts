@@ -21,9 +21,24 @@ export async function executeOps(
           case 'EnsureModels': {
             const existing = new Set<string>();
             for await (const m of client.listModels()) existing.add(m.id);
-            const toCreate = op.models.filter((m: any) => !existing.has(m['@id']));
-            if (toCreate.length) {
-              await client.createModels(toCreate as any);
+            
+            // Delete existing models to replace them with new definitions
+            for (const model of op.models) {
+              const modelId = model['@id'];
+              if (existing.has(modelId)) {
+                try {
+                  await client.deleteModel(modelId);
+                  context.info(`Deleted existing model: ${modelId}`);
+                } catch (err: any) {
+                  context.warn(`Failed to delete model ${modelId}, attempting to create anyway`, { error: String(err) });
+                }
+              }
+            }
+            
+            // Create/replace models
+            if (op.models.length) {
+              await client.createModels(op.models as any);
+              context.info(`Created/replaced ${op.models.length} models`);
             }
             break;
           }
