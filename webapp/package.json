@@ -13,7 +13,9 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "@vueuse/core": "^10.0.0",
+    "bootstrap": "^5.3.8",
     "vue": "^3.4.0"
   },
   "devDependencies": {
