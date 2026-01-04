@@ -12,6 +12,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import type { HueLight } from "../../api/src/models/HueLight";
 import { FloorPlanSvgLoader } from "../services/FloorPlanSvgLoader";
+import { RoomLocator } from "../services/RoomLocator";
 
 const mapContainer = ref<HTMLDivElement | null>(null);
 let map: L.Map | null = null;
@@ -24,6 +25,7 @@ const svgDimensions = ref<{ width: number; height: number }>({
   width: 475,
   height: 455,
 }); // Track individual positions for unplaced lights
+let roomLocator: RoomLocator | null = null;
 
 // Parse SVG to extract room polygons and center positions
 async function loadRoomData() {
@@ -33,6 +35,7 @@ async function loadRoomData() {
     roomPositions.value = data.roomCenters;
     roomPolygons.value = data.roomPolygons;
     svgDimensions.value = data.dimensions;
+    roomLocator = new RoomLocator(roomPolygons.value, svgDimensions.value);
     console.log(
       `Loaded ${Object.keys(data.roomCenters).length} rooms with ${
         Object.keys(data.roomPolygons).length
@@ -43,41 +46,10 @@ async function loadRoomData() {
   }
 }
 
-// Ray casting algorithm to check if point is inside polygon
-function pointInPolygon(
-  point: [number, number],
-  polygon: Array<[number, number]>,
-): boolean {
-  const [x, y] = point;
-  let inside = false;
-
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const [xi, yi] = polygon[i];
-    const [xj, yj] = polygon[j];
-
-    const intersect =
-      yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-    if (intersect) inside = !inside;
-  }
-
-  return inside;
-}
-
 // Determine which room a position belongs to using polygon detection
 function getRoomAtPosition(posX: number, posY: number): string | null {
-  // Convert Leaflet coordinates [lat, lng] to SVG coordinates [x, y] with Y inversion
-  const x = posX;
-  const y = svgDimensions.value.height - posY;
-  const point: [number, number] = [x, y];
-
-  // Check each room's polygon
-  for (const [roomId, polygon] of Object.entries(roomPolygons.value)) {
-    if (polygon && pointInPolygon(point, polygon)) {
-      return roomId;
-    }
-  }
-
-  return null;
+  if (!roomLocator) return null;
+  return roomLocator.locate(posX, posY);
 }
 
 // Draw room polygons on the map for visualization/debugging
