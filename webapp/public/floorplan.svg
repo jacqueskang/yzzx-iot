@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
    version="1.0"
-   width="960"
-   height="679"
-   viewBox="0 0 960 679"
+   width="475"
+   height="455"
+   viewBox="0 0 475 455"
    id="svg2"
    sodipodi:docname="floorplan.svg"
    inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
@@ -23,8 +23,8 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="1"
-     inkscape:cx="279.5"
-     inkscape:cy="398"
+     inkscape:cx="288"
+     inkscape:cy="349"
      inkscape:window-width="1920"
      inkscape:window-height="1010"
      inkscape:window-x="-6"
@@ -35,8 +35,8 @@
     <inkscape:grid
        id="grid3"
        units="px"
-       originx="0"
-       originy="0"
+       originx="-20"
+       originy="-20"
        spacingx="1"
        spacingy="1"
        empcolor="#0099e5"
@@ -51,7 +51,7 @@
      fill="#000000"
      stroke="none"
      id="walls"
-     transform="translate(0,-1)">
+     transform="translate(-220,-91)">
     <path
        id="path1"
        d="m 510,436 h 50 V 541 H 465 V 436 h 5 v -5 h -10 v 15 h -5 v 5 h 5 v 90 h -45 v -90 h 5 v -5 h -35 v 5 h 25 v 90 H 280 v -90 h 70 v -5 H 280 V 371 H 225 V 286 H 440 V 96 h 20 V 91 H 435 V 281 H 220 v 95 h 55 V 546 H 695 V 141 H 515 V 91 h -15 v 5 h 10 v 50 H 690 V 271 H 515 v -90 h -5 v 95 h 25 v 75 h -25 v 5 h 30 V 276 H 690 V 391 H 510 l -0.016,5 H 690 V 541 H 565 V 431 h -55 z"
@@ -60,8 +60,8 @@
   <g
      fill="#ffffff"
      stroke="none"
-     id="room-bedroom"
-     transform="translate(0,-1)"
+     id="g1"
+     transform="translate(-220,-91)"
      inkscape:label="room-bedroom"
      style="display:inline">
     <path
@@ -69,198 +69,104 @@
        inkscape:label="path1"
        d="m 515,396 h 175 v 34 111 H 565 V 431 h -50 z"
        sodipodi:nodetypes="cccccccc"
-       style="display:inline;fill:#c6ebc9;fill-opacity:1"
-       sodipodi:insensitive="true" />
-    <text
-       xml:space="preserve"
-       x="614.90625"
-       y="472.42871"
-       id="text2-2-9-8-7"
-       inkscape:label="label"><tspan
-         sodipodi:role="line"
-         id="tspan7">卧室</tspan></text>
+       style="display:inline;fill:#c6ebc9;fill-opacity:1" />
   </g>
   <g
      fill="#ffffff"
      stroke="none"
      id="room-bathroom"
-     transform="translate(0,-1)"
+     transform="translate(-220,-91)"
      inkscape:label="room-bathroom"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
        id="path2"
        inkscape:label="path1"
        d="m 465,435 95,1 v 105 h -95 z"
        sodipodi:nodetypes="ccccc"
-       style="display:inline;fill:#c6ebc9;fill-opacity:1"
-       sodipodi:insensitive="true" />
-    <text
-       xml:space="preserve"
-       x="500.78125"
-       y="491.92871"
-       id="text2-2-9-8-5"
-       inkscape:label="label"><tspan
-         sodipodi:role="line"
-         id="tspan6"
-         x="500.78125"
-         y="491.92871">浴室</tspan></text>
+       style="display:inline;fill:#c6ebc9;fill-opacity:1" />
   </g>
   <g
      fill="#ffffff"
      stroke="none"
      id="room-wc"
-     transform="translate(-40,-51)"
+     transform="translate(-260,-141)"
      inkscape:label="room-wc"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
        id="path2-4"
        inkscape:label="path1"
        d="m 455,501 h 45 v 90 h -45 z"
        sodipodi:nodetypes="ccccc"
-       style="display:inline;fill:#c6ebc9;fill-opacity:1"
-       sodipodi:insensitive="true" />
-    <text
-       xml:space="preserve"
-       x="465.78125"
-       y="549.72559"
-       id="text2-2-9-8"
-       inkscape:label="label"><tspan
-         sodipodi:role="line"
-         id="tspan5"
-         x="0"
-         y="0">厕所</tspan></text>
+       style="display:inline;fill:#c6ebc9;fill-opacity:1" />
   </g>
   <g
      fill="#ffffff"
      stroke="none"
      id="room-kitchen"
-     transform="translate(-70,-51)"
+     transform="translate(-290,-141)"
      inkscape:label="room-kitchen"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
        id="path2-4-2"
        inkscape:label="path1"
        d="m 350,501 h 130 v 90 H 350 Z"
        sodipodi:nodetypes="ccccc"
        style="display:inline;fill:#c6ebc9;fill-opacity:1" />
-    <text
-       xml:space="preserve"
-       x="406.70312"
-       y="549.875"
-       id="text2-2-9"
-       inkscape:label="label"><tspan
-         sodipodi:role="line"
-         id="tspan1-4"
-         x="406.70312"
-         y="549.875">厨房</tspan></text>
   </g>
   <g
      fill="#ffffff"
      stroke="none"
      id="room-office"
-     transform="translate(-80,-111)"
+     transform="translate(-300,-201)"
      inkscape:label="room-office"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
        id="path2-4-2-5"
        inkscape:label="path1"
        d="M 620,386 H 770 V 501 H 595 v -35 h 25 z"
        sodipodi:nodetypes="ccccccc"
        style="display:inline;fill:#c6ebc9;fill-opacity:1" />
-    <text
-       xml:space="preserve"
-       x="681.70312"
-       y="444.875"
-       id="text2-2"
-       inkscape:label="label"><tspan
-         sodipodi:role="line"
-         id="tspan1"
-         x="681.70312"
-         y="444.875">办公室</tspan></text>
   </g>
   <g
      fill="#ffffff"
      stroke="none"
      id="room-guest-room"
-     transform="translate(-280,29)"
+     transform="translate(-500,-61)"
      inkscape:label="room-guest-room"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
        id="path2-4-2-5-1"
        inkscape:label="path1"
        d="M 795,116 H 970 V 241 H 795 Z"
        sodipodi:nodetypes="ccccc"
        style="display:inline;fill:#c6ebc9;fill-opacity:1" />
-    <text
-       xml:space="preserve"
-       x="870.47656"
-       y="182.78906"
-       id="text2"
-       inkscape:label="label"><tspan
-         sodipodi:role="line"
-         id="tspan2"
-         x="870.47656"
-         y="182.78906">客房</tspan></text>
   </g>
   <g
      fill="#ffffff"
      stroke="none"
      id="room-entryway"
-     transform="translate(-440,269)"
+     transform="translate(-660,179)"
      inkscape:label="room-entryway"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
        id="path2-4-2-5-1-2"
        inkscape:label="path1"
        d="m 880,-174 h 70 V 11 h -70 z"
        sodipodi:nodetypes="ccccc"
-       style="display:inline;fill:#c6ebc9;fill-opacity:1"
-       sodipodi:insensitive="true" />
-    <text
-       xml:space="preserve"
-       x="906.70312"
-       y="-79.296875"
-       id="text2-8"
-       inkscape:label="label"
-       inkscape:transform-center-x="43.133514"
-       inkscape:transform-center-y="36.769553"><tspan
-         sodipodi:role="line"
-         id="tspan3"
-         x="906.70312"
-         y="-79.296875">门厅</tspan></text>
+       style="display:inline;fill:#c6ebc9;fill-opacity:1" />
   </g>
   <g
      fill="#ffffff"
      stroke="none"
      id="room-living-room"
-     transform="translate(-450,409)"
+     transform="translate(-670,319)"
      inkscape:label="room-living-room"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <path
        id="path2-4-2-5-1-2-1"
        inkscape:label="path1"
        d="M 675,-124 H 960 V 21 H 910 V 36 H 730 v -75 h -55 z"
        sodipodi:nodetypes="ccccccccc"
-       style="display:inline;fill:#c6ebc9;fill-opacity:1"
-       sodipodi:insensitive="true" />
-    <text
-       xml:space="preserve"
-       x="815.70312"
-       y="-45.505859"
-       id="text2-8-9"
-       inkscape:label="label"
-       inkscape:transform-center-x="43.133514"
-       inkscape:transform-center-y="36.769553"><tspan
-         sodipodi:role="line"
-         id="tspan4"
-         x="815.70312"
-         y="-45.505859">客厅</tspan></text>
+       style="display:inline;fill:#c6ebc9;fill-opacity:1" />
   </g>
 </svg>

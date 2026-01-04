@@ -19,11 +19,15 @@ const markers = new Map<string, L.Marker>();
 const roomPositions = ref<Record<string, [number, number]>>({});
 const roomPolygons = ref<Record<string, Array<[number, number]>>>({});
 const unplacedLightPositions = ref<Record<string, [number, number]>>({}); // Track individual positions for unplaced lights
+const svgDimensions = ref<{ width: number; height: number }>({
+  width: 475,
+  height: 455,
+}); // Track individual positions for unplaced lights
 
 // Parse SVG to extract room polygons and center positions
 async function loadRoomData() {
   try {
-    const response = await fetch("/floorplan.svg");
+    const response = await fetch("/floorplan.svg?" + Date.now());
     const svgText = await response.text();
 
     // Create temporary container to render SVG for accurate bbox calculations
@@ -35,6 +39,21 @@ async function loadRoomData() {
 
     const positions: Record<string, [number, number]> = {};
     const polygons: Record<string, Array<[number, number]>> = {};
+
+    // Extract SVG dimensions from viewBox or width/height attributes
+    const svgElement = container.querySelector("svg");
+    if (svgElement) {
+      const viewBox = svgElement.getAttribute("viewBox");
+      if (viewBox) {
+        const [, , width, height] = viewBox.split(/\s+|,/).map(Number);
+        svgDimensions.value = { width, height };
+      } else {
+        const width = parseFloat(svgElement.getAttribute("width") || "475");
+        const height = parseFloat(svgElement.getAttribute("height") || "455");
+        svgDimensions.value = { width, height };
+      }
+    }
+
     const roomGroups = container.querySelectorAll('[id^="room-"]');
 
     roomGroups.forEach((group) => {
@@ -271,9 +290,8 @@ function pointInPolygon(
 // Determine which room a position belongs to using polygon detection
 function getRoomAtPosition(posX: number, posY: number): string | null {
   // Convert Leaflet coordinates [lat, lng] to SVG coordinates [x, y] with Y inversion
-  const SVG_HEIGHT = 679;
   const x = posX;
-  const y = SVG_HEIGHT - posY;
+  const y = svgDimensions.value.height - posY;
   const point: [number, number] = [x, y];
 
   // Check each room's polygon
@@ -294,9 +312,8 @@ function drawRoomPolygons() {
   Object.entries(roomPolygons.value).forEach(([roomId, polygon]) => {
     if (polygon && polygon.length > 0) {
       // Convert [x, y] to Leaflet [lat, lng] format with inverted Y
-      const SVG_HEIGHT = 679;
       const latLngs = polygon.map(
-        ([x, y]) => [SVG_HEIGHT - y, x] as [number, number],
+        ([x, y]) => [svgDimensions.value.height - y, x] as [number, number],
       );
 
       const leafletPolygon = L.polygon(latLngs, {
@@ -535,10 +552,10 @@ onMounted(async () => {
   // Load room data (polygons and positions) from SVG first
   await loadRoomData();
 
-  // Create Leaflet map with image overlay
+  // Create Leaflet map with image overlay using dynamic SVG dimensions
   const bounds: L.LatLngBoundsExpression = [
     [0, 0],
-    [679, 960],
+    [svgDimensions.value.height, svgDimensions.value.width],
   ];
 
   map = L.map(mapContainer.value, {
