@@ -13,6 +13,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import type { HueLight } from "../../api/src/models/HueLight";
 import { FloorPlanSvgLoader } from "../services/FloorPlanSvgLoader";
 import { RoomLocator } from "../services/RoomLocator";
+import { LightApi } from "../services/LightApi";
 
 const mapContainer = ref<HTMLDivElement | null>(null);
 let map: L.Map | null = null;
@@ -26,6 +27,7 @@ const svgDimensions = ref<{ width: number; height: number }>({
   height: 455,
 }); // Track individual positions for unplaced lights
 let roomLocator: RoomLocator | null = null;
+const lightApi = new LightApi();
 
 // Parse SVG to extract room polygons and center positions
 async function loadRoomData() {
@@ -202,15 +204,7 @@ function createMarker(light: HueLight): L.Marker | null {
         patchBody.locatedIn = newRoom;
       }
 
-      const response = await fetch(`/api/lights/${light.id}/location`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patchBody),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update position: ${response.statusText}`);
-      }
+      await lightApi.updateLightLocation(light.id, patchBody);
 
       // Update local state
       const lightIndex = lights.value.findIndex((l) => l.id === light.id);
@@ -283,11 +277,7 @@ function updateMarkers() {
 
 async function fetchLights() {
   try {
-    const response = await fetch("/api/lights");
-    if (!response.ok) {
-      throw new Error(`Failed to fetch lights: ${response.statusText}`);
-    }
-    lights.value = await response.json();
+    lights.value = await lightApi.fetchLights();
     updateMarkers();
   } catch (error) {
     console.error("Error fetching lights:", error);
